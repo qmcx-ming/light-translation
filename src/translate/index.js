@@ -1,4 +1,5 @@
 import { googleTranslate } from './google';
+import { baiduTranslate } from './baidu';
 import { translationEngines, ErrorMessage } from './request';
 import voiceList from './voices';
 
@@ -33,6 +34,8 @@ async function translate(text, engine = 'google', appId, secretKey, from = 'auto
 	switch (engine) {
 		case 'google':
 			return googleTranslate(text, url, from, to, original);
+			case 'baidu':
+				return baiduTranslate(text, appId, secretKey, from, to, original);
 	}
 }
 

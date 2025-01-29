@@ -12,7 +12,7 @@ const props = defineProps({
     required: true,
     default: 'zh'
   },
-  googleLangs: {
+  langs: {
     type: Array,
     required: true,
     default: () => []
@@ -47,7 +47,7 @@ const exchange = () => {
 
 const toLanguages = computed(() => {
   // 排除auto
-  return props.googleLangs.filter(item => item.code !== 'auto');
+  return props.langs.filter(item => item.code !== 'auto');
 })
 </script>
 <template>
@@ -61,7 +61,7 @@ const toLanguages = computed(() => {
       @change="fromChange"
     >
       <el-option
-        v-for="item in googleLangs"
+        v-for="item in langs"
         :key="item.code"
         :label="item.name"
         :value="item.code"

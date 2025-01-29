@@ -8,6 +8,17 @@ const showMessage = (message, type = 'success') => {
   ElMessage({ message, type, plain: true });
 }
 
+/**
+ * 处理密钥，根据,分割
+ * @param {string} key 密钥
+ * @returns
+ */
+const handleKey = (key) => {
+  const [appId, secretKey] = key.split(',')
+  return { appId, secretKey }
+}
+
 export {
-  showMessage
+  showMessage,
+  handleKey
 }

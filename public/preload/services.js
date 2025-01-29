@@ -1,5 +1,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const crypto = require('node:crypto')
 
 // 通过 window 对象向渲染进程注入 nodejs 能力
 window.services = {
@@ -20,5 +21,8 @@ window.services = {
     const filePath = path.join(window.utools.getPath('downloads'), Date.now().toString() + '.' + matchs[1])
     fs.writeFileSync(filePath, base64Url.substring(matchs[0].length), { encoding: 'base64' })
     return filePath
+  },
+  MD5(str) {
+    return crypto.createHash('md5').update(str).digest('hex')
   }
 }

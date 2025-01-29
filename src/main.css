@@ -11,27 +11,23 @@ body {
   padding: 0;
 }
 
-button {
-  border: none;
-  background: none var(--blue);
-  color: var(--light);
-  line-height: 2.5;
-  cursor: pointer;
-  transition: opacity .2s;
+/* 抽屉 */
+.el-drawer__header {
+  margin-bottom: 0 !important;
 }
 
-button:disabled {
-  filter: grayscale(1);
-  cursor: not-allowed;
+.el-drawer__body {
+  padding-top: 0px !important;
 }
 
-button:not(:disabled):active {
-  opacity: 0.6;
+.loading-icon {
+  opacity: 0;
 }
 
-textarea {
-  display: block;
-  margin: 0;
+.loading-icon.loading {
+  /* 旋转 */
+  animation: spin 0.7s linear infinite;
+  opacity: 1;
 }
 
 /* 旋转动画 */
@@ -45,9 +41,28 @@ textarea {
 	}
 }
 
+/* 设置页 */
+.setting-page .el-input-group__prepend {
+  background-color: var(--input-grepend-bg);
+  padding: 0px 12px;
+}
+
+.setting-page .el-input-group__append {
+  background-color: var(--input-append-bg);
+  padding: 0;
+  width: 50%;
+}
+
+.setting-page .el-input-group__append .el-input__wrapper {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     --icon-color: #000000;
+    --input-grepend-bg: #ffffff;
+    --input-append-bg: #ffffff;
   }
   body {
     background-color: #ffffff;
@@ -65,6 +80,8 @@ textarea {
 @media (prefers-color-scheme: dark) {
   :root {
     --icon-color: #ffffff;
+    --input-grepend-bg: #262727;
+    --input-append-bg: #141414;
   }
   &::-webkit-scrollbar-track-piece {
     background-color: #303133;

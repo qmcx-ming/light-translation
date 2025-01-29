@@ -1,5 +1,20 @@
 const data = {
   googleUrl: 'https://gtranslate.darkluna.top',
+  translateEngine: 'google',
+  baidu: {
+    id: '',
+    key: ''
+  },
+  alibaba: {
+    id: '',
+    key: ''
+  },
+  tencent: {
+    id: '',
+    key: ''
+  },
+  // 是否开启复制快捷键，默认开启
+  copyKey: true
 }
 
 /**

@@ -1,8 +1,7 @@
 <script lang="js" setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import googleLangs from '../languages/google-language';
 import { translate, audio } from '../translate';
-import { getItem } from '../utils/db';
+import { getItem, setItem } from '../utils/db';
 import { showMessage } from '../utils/common';
 
 import SettingPage from '../components/SettingPage/index.vue';
@@ -24,8 +23,10 @@ const props = defineProps({
 })
 
 const textRef = ref();
+const languages = ref([]);
+const config = ref(getItem('config'));
 
-onMounted(() => {
+onMounted(async () => {
   if(props.text) {
     text.value = props.text;
     toTranslate();
@@ -33,7 +34,15 @@ onMounted(() => {
   if(props.show) {
     textRef.value.focus();
   }
+  await setLanguage();
+  to.value = languages.value[1].code;
 })
+
+const setLanguage = async () => {
+  // 动态导入语言包
+  const module = await import(`../languages/${engine.value}-language.json`);
+  languages.value = module.default;
+}
 
 const arrowLeft = ref();
 const iptRows = ref(15);// 输入框默认行数
@@ -49,7 +58,7 @@ const hidePopover = () => {
   arrowLeft.value.style.transform = 'rotate(0deg)';
 }
 
-const engine = ref('google');
+const engine = ref(getItem('config').translateEngine);
 
 const engineList = ref([
   {
@@ -70,18 +79,40 @@ const engineList = ref([
   }
 ]);
 
-const changeEngine = (engineId) => {
+const changeEngine = async (engineId) => {
   engine.value = engineId;
+  config.value.translateEngine = engineId;
+  setItem('config', config.value);
+  await setLanguage();
+  from.value = languages.value[0].code;
+  to.value = languages.value[1].code;
 }
 
 const settingOpen = ref(false);
 
+const settingUpdate = (cfg) => {
+  from.value = languages.value[0].code;
+  to.value = languages.value[1].code;
+  googleUrl.value = cfg.googleUrl
+  engine.value = cfg.translateEngine;
+  config.value = cfg;
+}
+
+watch(settingOpen, (val) => {
+  if(val) {
+    window.removeEventListener('copy', copyResult);
+  } else {
+    if(config.value.copyKey) window.addEventListener('copy', copyResult);
+  }
+});
+
 const googleUrl = ref(getItem('config').googleUrl);
+const isLoading = ref(false);
 
 const text = ref('');
 const result = ref('');
 const from = ref('auto');
-const to = ref('zh-CN');
+const to = ref('');
 const fromPhonetic = ref('');
 const toPhonetic = ref('');
 const detectLang = ref({
@@ -92,7 +123,7 @@ const dictAndExample = ref('');
 
 const toLanguages = computed(() => {
   // 排除auto
-  return googleLangs.filter(item => item.code !== 'auto');
+  return languages.value.filter(item => item.code !== 'auto');
 })
 
 const fromSelectChange = (val) => {
@@ -116,38 +147,52 @@ const toTranslate = () => {
     return;
   }
   result.value = '正在翻译中...';
+  isLoading.value = true;
   autoChange();
-  translate(text.value, engine.value, 'appId', 'secretKey',
+  const { id, key } = config.value[engine.value] || { id: 'xxx', key: 'xxx' };
+  if(!id || !key) {
+    showMessage(`请先检查${engineList.value.find(item=> item.id === engine.value).name}配置是否完善`, 'error');
+    clearText(false);
+    isLoading.value = false;
+    return;
+  }
+  translate(text.value, engine.value, id, key,
   from.value, to.value, googleUrl.value)
   .then(res => {
     console.log(res);
     result.value = res.dst;
-    fromPhonetic.value = res.detail.fromPhonetic;
-    toPhonetic.value = res.detail.toPhonetic;
+    if(engine.value === 'google') {
+      fromPhonetic.value = res.detail.fromPhonetic;
+      toPhonetic.value = res.detail.toPhonetic;
+      handleDictAndExample(res.detail);
+    } else {
+      fromPhonetic.value = '';
+      toPhonetic.value = '';
+      dictAndExample.value = '';
+    }
     if(from.value === 'auto')
-      detectLang.value = googleLangs.find(item => item.code === res.from);
-    handleDictAndExample(res.detail);
+      detectLang.value = languages.value.find(item => item.code === res.from);
     soundEnable('from', true, fromSoundWrapper.value);
     soundEnable('to', true, toSoundWrapper.value);
   }).catch(err => {
     console.log(err);
 
     showMessage(err.error, 'error');
-  })
+  }).finally(() => isLoading.value = false);
 }
 
 // 一个简单的中英文语种自动切换
 const autoChange = () => {
+  // 在语言表中，索引为1的是中文，索引为2的是英文
   // 判断text是否为中文
-  if(/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === 'zh-CN') {
-    to.value = 'en';
+  if(/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === languages.value[1].code) {
+    to.value = languages.value[2].code;
   }
   // 判断text是否为英文
-  if(!/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === 'en') {
-    to.value = 'zh-CN';
+  if(!/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === languages.value[2].code) {
+    to.value = languages.value[1].code;
   }
 }
-
 
 // 处理词典和例句
 const handleDictAndExample = (detail) => {
@@ -175,8 +220,10 @@ const handleDictAndExample = (detail) => {
   dictAndExample.value = str;
 }
 
-const clearText = () => {
-  text.value = '';
+const clearText = (isText = true) => {
+  if(isText) {
+    text.value = '';
+  }
   result.value = '';
   fromPhonetic.value = '';
   toPhonetic.value = '';
@@ -230,12 +277,9 @@ const copyResult = () => {
   showMessage('已复制到剪切板');
 }
 
-window.addEventListener('keydown', (e) => {
-  // Ctrl + C 复制结果
-  if (e.ctrlKey && e.key === 'c') {
-    copyResult();
-  }
-})
+if(config.value.copyKey) {
+  window.addEventListener('copy', copyResult);
+}
 
 const translateQuote = (quote) => {
   text.value = quote;
@@ -341,7 +385,6 @@ watch(isPlaying.value, (newVal) => {
     }
   })
 })
-
 </script>
 
 <template>
@@ -350,7 +393,7 @@ watch(isPlaying.value, (newVal) => {
     <lang-select
       :from="from"
       :to="to"
-      :google-langs="googleLangs"
+      :langs="languages"
       :detect-lang="detectLang"
       @from-select-change="fromSelectChange"
       @to-select-change="toSelectChange"
@@ -381,13 +424,13 @@ watch(isPlaying.value, (newVal) => {
                 color="var(--icon-color)"
                 @click="toggleSound(1)"
                 :style="{
-                  pointerEvents: fromSound ? 'auto' : 'none'
+                  pointerEvents: fromSound ? 'auto' : 'none',
                 }"
                 :custom-style="{ opacity: fromSound ? 1 : 0.6 }"
               />
             </div>
 
-            <el-tooltip :content="fromPhonetic" placement="top">
+            <el-tooltip :content="fromPhonetic" placement="top" effect="light">
               <div class="from-phonetic">{{ fromPhonetic }}</div>
             </el-tooltip>
           </div>
@@ -432,12 +475,12 @@ watch(isPlaying.value, (newVal) => {
                 color="var(--icon-color)"
                 @click="toggleSound(2)"
                 :style="{
-                  pointerEvents: toSound ? 'auto' : 'none'
+                  pointerEvents: toSound ? 'auto' : 'none',
                 }"
                 :custom-style="{ opacity: toSound ? 1 : 0.6 }"
               />
             </div>
-            <el-tooltip :content="toPhonetic" placement="top">
+            <el-tooltip :content="toPhonetic" placement="top" effect="light">
               <div class="to-phonetic">{{ toPhonetic }}</div>
             </el-tooltip>
           </div>
@@ -462,9 +505,12 @@ watch(isPlaying.value, (newVal) => {
     >
       <template #reference>
         <div class="bottom-more">
-          <el-text style="opacity: 0" class="message"
-            >音频正在加载中...</el-text
-          >
+          <svg-icon
+            :class="isLoading ? 'loading-icon loading' : 'loading-icon'"
+            icon-name="icon-loading"
+            size="var(--icon-size)"
+            color="var(--icon-color)"
+          />
           <span
             ref="arrowLeft"
             :style="{ opacity: dictAndExample.length === 0 ? 0 : 1 }"
@@ -499,12 +545,9 @@ watch(isPlaying.value, (newVal) => {
                 'engine-item': true,
                 'engine-selected': item.id === engine,
               }"
-              :disabled="item.id !== 'google'"
               @click="changeEngine(item.id)"
-              :title="item.id !== 'google' ? '暂未开发🚀' : ''"
             >
               <img
-                :style="{ opacity: item.id === 'google' ? 1 : 0.5 }"
                 class="icon"
                 :src="`./icons/engine/${item.id}.svg`"
                 alt="图标"
@@ -534,7 +577,7 @@ watch(isPlaying.value, (newVal) => {
       <setting-page
         :settingOpen="settingOpen"
         @update:settingOpen="settingOpen = $event"
-        @update:config="googleUrl = $event.googleUrl"
+        @update:config="settingUpdate"
       ></setting-page>
     </el-drawer>
   </div>

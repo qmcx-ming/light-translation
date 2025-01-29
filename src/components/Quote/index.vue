@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { getItem, setItem } from '../../utils/db';
 
 const quote = ref('');
-const isHovering = ref(false);
 
 const getDate = () => {
   let oDate = new Date();
@@ -52,7 +51,7 @@ const translate = () => {
 </script>
 <template>
   <div class="quote-container">
-    <el-tooltip placement="right" effect="light">
+    <el-tooltip placement="right" effect="light" :show-arrow="false">
       <template #content>
         <div class="quote-tool">
           <svg-icon
