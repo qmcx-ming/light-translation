@@ -23,7 +23,6 @@ onMounted(() => {
     // 监听主题切换
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
       theme = e.matches ? 'dark' : '';
-      console.log(theme);
       // 判断是否是暗黑模式
       document.documentElement.className = utools.isDarkColors() ? "dark" : "";
     })

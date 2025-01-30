@@ -1,5 +1,7 @@
 import { googleTranslate } from './google';
 import { baiduTranslate } from './baidu';
+import { alibabaTranslate } from './alibaba';
+import { tencentTranslate } from './tencent';
 import { translationEngines, ErrorMessage } from './request';
 import voiceList from './voices';
 
@@ -34,8 +36,12 @@ async function translate(text, engine = 'google', appId, secretKey, from = 'auto
 	switch (engine) {
 		case 'google':
 			return googleTranslate(text, url, from, to, original);
-			case 'baidu':
-				return baiduTranslate(text, appId, secretKey, from, to, original);
+		case 'baidu':
+			return baiduTranslate(text, appId, secretKey, from, to, original);
+		case 'alibaba':
+			return alibabaTranslate(text, appId, secretKey, version, scene, from, to, original);
+		case 'tencent':
+			return tencentTranslate(text, appId, secretKey, from, to, original);
 	}
 }
 
@@ -50,7 +56,7 @@ async function translate(text, engine = 'google', appId, secretKey, from = 'auto
 function validate(text, appId, secretKey, engine, url) {
 	if (isEmpty(text)) return Promise.reject(new ErrorMessage(engine, '翻译内容不能为空'));
 	if (engine !== 'google') {
-		if (isEmpty(appId) || isEmpty(secretKey)) 
+		if (isEmpty(appId) || isEmpty(secretKey))
 			return Promise.reject(new ErrorMessage(engine, '应用ID 和密钥不能为空'));
 	} else {
 		// 谷歌翻译适用
@@ -78,15 +84,15 @@ function createSSML(text, voiceName) {
  * @param {string} language 语种 
  */
 async function audio(text, language) {
-	if(isEmpty(text)) return Promise.reject(new ErrorMessage('音频数据', '文本不能为空'));
-	if(isEmpty(language)) return Promise.reject(new ErrorMessage('音频数据', '语种不能为空'));
+	if (isEmpty(text)) return Promise.reject(new ErrorMessage('音频数据', '文本不能为空'));
+	if (isEmpty(language)) return Promise.reject(new ErrorMessage('音频数据', '语种不能为空'));
 	let voiceName = '';
 	voiceList.forEach(voice => {
-		if(voice.codes.includes(language)) {
+		if (voice.codes.includes(language)) {
 			voiceName = voice.name;
 		}
 	})
-	if(isEmpty(voiceName)) {
+	if (isEmpty(voiceName)) {
 		return Promise.reject(new ErrorMessage('音频数据', '没有该语音包，可以尝试切换语种，再次播放哦'));
 	}
 	let ssml = createSSML(text, voiceName);
@@ -118,6 +124,6 @@ function isEmpty(str) {
 }
 
 export {
-  translate,
-  audio
+	translate,
+	audio
 }

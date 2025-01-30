@@ -27,6 +27,8 @@ const languages = ref([]);
 const config = ref(getItem('config'));
 
 onMounted(async () => {
+  await setLanguage();
+  to.value = languages.value[1].code;
   if(props.text) {
     text.value = props.text;
     toTranslate();
@@ -34,8 +36,6 @@ onMounted(async () => {
   if(props.show) {
     textRef.value.focus();
   }
-  await setLanguage();
-  to.value = languages.value[1].code;
 })
 
 const setLanguage = async () => {
@@ -70,12 +70,12 @@ const engineList = ref([
     name: '百度翻译',
   },
   {
-    id: 'tencent',
-    name: '腾讯翻译',
-  },
-  {
     id: 'alibaba',
     name: '阿里翻译',
+  },
+  {
+    id: 'tencent',
+    name: '腾讯翻译',
   }
 ]);
 
@@ -176,13 +176,13 @@ const toTranslate = () => {
     soundEnable('to', true, toSoundWrapper.value);
   }).catch(err => {
     console.log(err);
-
     showMessage(err.error, 'error');
+    clearText(false);
   }).finally(() => isLoading.value = false);
 }
 
 // 一个简单的中英文语种自动切换
-const autoChange = () => {
+const autoChange = async () => {
   // 在语言表中，索引为1的是中文，索引为2的是英文
   // 判断text是否为中文
   if(/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === languages.value[1].code) {
@@ -703,7 +703,7 @@ body {
 .footer-toolbar {
   position: fixed;
   bottom: 5px;
-  right: 5px;
+  right: 10px;
 }
 
 .footer-toolbar .engine-icon {

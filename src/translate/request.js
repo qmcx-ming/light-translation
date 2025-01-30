@@ -31,7 +31,7 @@ const translationEngines = {
 		// 通用版本
 		general: 'https://mt.aliyuncs.com/api/translate/web/general',
 		// 专业版本
-		ecommerce: 'http://mt.aliyuncs.com/api/translate/web/ecommerce'
+		ecommerce: 'https://mt.aliyuncs.com/api/translate/web/ecommerce'
 	},
 	google: 'https://translate.google.com'
 }

@@ -68,6 +68,13 @@ const engineList = ref([
   },
 ]);
 
+const idKeys = ref({
+  google: { id: 'API Key', key: 'API Secret'},
+  baidu: { id: 'APP ID', key: '密钥' },
+  alibaba: { id: 'AccessKey ID', key: 'AccessKey Secret' },
+  tencent: { id: 'SecretId', key: 'SecretKey' },
+})
+
 const openLink = (id) => {
   const url = {
     baidu: 'https://api.fanyi.baidu.com/product/11',
@@ -152,7 +159,7 @@ const openLink = (id) => {
           <el-input
             type="password"
             v-model="form.alibaba.id"
-            placeholder="AccessKeyID"
+            placeholder="AccessKey ID"
             show-password
             clearable
           >
@@ -167,7 +174,7 @@ const openLink = (id) => {
               <el-input
                 v-model="form.alibaba.key"
                 type="password"
-                placeholder="AccessKeySecret"
+                placeholder="AccessKey Secret"
                 show-password
                 clearable
               ></el-input>
@@ -203,14 +210,24 @@ const openLink = (id) => {
             </template>
           </el-input>
         </el-form-item>
-        <el-text class="engine-desc" size="small" v-show="form.translateEngine !== 'google'">
-          <el-link class="info-link" @click="openLink('other')">
-            不会申请怎么办？👈
-          </el-link>
-          <el-link class="info-link" @click="openLink(form.translateEngine)">
-            还没有翻译API？👈
-          </el-link>
-        </el-text>
+        <div class="engine-desc" v-show="form.translateEngine !== 'google'">
+          <div class="desc-left">
+            <el-text size="small" class="ik-tip">
+              {{ idKeys[form.translateEngine].id }}
+            </el-text>
+            <el-text size="small" class="ik-tip">
+              {{ idKeys[form.translateEngine].key }}
+            </el-text>
+          </div>
+          <div class="desc-right">
+            <el-link class="info-link" @click="openLink('other')">
+              不会申请怎么办？👈
+            </el-link>
+            <el-link class="info-link" @click="openLink(form.translateEngine)">
+              还没有翻译API？👈
+            </el-link>
+          </div>
+        </div>
         <h4>全局配置</h4>
         <el-form-item label="快捷复制">
           <el-radio-group v-model="form.copyKey">
@@ -251,6 +268,23 @@ const openLink = (id) => {
 .engine-desc {
   display: flex;
   justify-content: flex-end;
+  position: relative;
+}
+
+.engine-desc .desc-left {
+  width: calc(100% - 108px - 40px);
+  display: flex;
+  position: absolute;
+  top: -12px;
+  left: 108px;
+}
+
+.desc-left .ik-tip {
+  flex: 1;
+}
+
+.engine-desc .desc-right {
+  display: flex;
   gap: 10px;
 }
 
