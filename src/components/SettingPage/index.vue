@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { getItem, setItem, init } from '../../utils/db';
+import { init } from '../../utils/db';
+import { getConfig, setConfig, engineList } from '../../utils/config';
 import { showMessage } from '../../utils/common';
 
 const props = defineProps({
@@ -16,11 +17,10 @@ const closeDrawer = () => {
   emit('update:settingOpen', false);
 };
 
-const form = ref(getItem('config'));
+const form = ref(getConfig());
 
 const saveData = () => {
-  console.log('保存数据');
-  setItem('config', form.value);
+  setConfig(form.value);
   emit('update:settingOpen', false);
   emit('update:config', form.value);
   showMessage('保存成功');
@@ -33,7 +33,7 @@ const openMessageBox = () => {
     type: 'warning',
   }).then(() => {
     init(true);
-    form.value = getItem('config');
+    form.value = getConfig();
     emit('update:config', form.value);
     showMessage('重置成功');
   });
@@ -44,45 +44,50 @@ watch(
   () => props.settingOpen,
   (val) => {
     if (val) {
-      form.value = getItem('config');
+      form.value = getConfig();
     }
   }
 );
 
-const engineList = ref([
-  {
-    id: 'google',
-    name: '谷歌翻译',
-  },
-  {
-    id: 'baidu',
-    name: '百度翻译',
-  },
-  {
-    id: 'alibaba',
-    name: '阿里翻译',
-  },
-  {
-    id: 'tencent',
-    name: '腾讯翻译',
-  },
-]);
-
 const idKeys = ref({
-  google: { id: 'API Key', key: 'API Secret'},
+  google: { id: 'API Key', key: 'API Secret' },
   baidu: { id: 'APP ID', key: '密钥' },
   alibaba: { id: 'AccessKey ID', key: 'AccessKey Secret' },
   tencent: { id: 'SecretId', key: 'SecretKey' },
-})
+});
 
 const openLink = (id) => {
   const url = {
     baidu: 'https://api.fanyi.baidu.com/product/11',
-    alibaba: 'https://www.aliyun.com/product/ai/base_alimt?source=5176.11533457&userCode=wsnup3vv',
+    alibaba:
+      'https://www.aliyun.com/product/ai/base_alimt?source=5176.11533457&userCode=wsnup3vv',
     tencent: 'https://cloud.tencent.com/product/tmt',
-    other: 'https://blog.csdn.net/weixin_44253490/article/details/126365385'
+    other: 'https://blog.csdn.net/weixin_44253490/article/details/126365385',
   }[id];
   window.utools.shellOpenExternal(url);
+};
+
+const speedTest = async () => {
+  const loading = ElLoading.service({ fullscreen: true, text: '测试中...' });
+  let url = new URL(form.value.googleUrl);
+  url.pathname = '/translate_a/element.js';
+  try {
+    const res = await fetch(url);
+    const msg = res.ok ? '测试成功' : '测试失败';
+    confirmSpeedTest(msg);
+  } catch(err) {
+    confirmSpeedTest('测试失败');
+  } finally {
+    loading.close();
+  }
+};
+
+const confirmSpeedTest = (msg) => {
+  ElMessageBox.confirm(msg, '谷歌翻译服务器', {
+    confirmButtonText: '确定',
+    type: 'info',
+    showCancelButton: false,
+  });
 }
 </script>
 <template>
@@ -110,13 +115,22 @@ const openLink = (id) => {
           label="谷歌翻译"
           v-show="form.translateEngine === 'google'"
         >
-          <el-input v-model="form.googleUrl" placeholder="请输入谷歌翻译地址">
+          <el-input
+            class="config-google-url"
+            v-model="form.googleUrl"
+            placeholder="请输入谷歌翻译地址"
+          >
             <template #prepend>
               <img
                 class="engine-icon"
                 src="/icons/engine/google.svg"
                 alt="图标"
               />
+            </template>
+            <template #append>
+              <button class="test-btn" @click="speedTest">
+                测试
+              </button>
             </template>
           </el-input>
           <el-text size="small"
@@ -233,8 +247,8 @@ const openLink = (id) => {
           <el-radio-group v-model="form.copyKey">
             <el-radio :value="true">开启</el-radio>
             <el-radio :value="false">关闭</el-radio>
-            <el-text class="mx-1" size="small"
-              >开启后，将实现全局复制翻译结果</el-text
+            <el-text size="small"
+              >开启后，按下<b>Ctrl + C</b>，将实现全局复制翻译结果</el-text
             >
           </el-radio-group>
         </el-form-item>
@@ -290,5 +304,24 @@ const openLink = (id) => {
 
 .engine-desc .info-link {
   font-size: 12px;
+}
+
+.test-btn {
+  width: 100%;
+  height: 100%;
+  padding: 0 10px;
+  border: none;
+  background-color: #409eff;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
+.test-btn:hover {
+  background-color: #66b1ff;
 }
 </style>

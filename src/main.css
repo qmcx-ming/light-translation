@@ -53,6 +53,12 @@ body {
   width: 50%;
 }
 
+.config-google-url .el-input-group__append {
+  padding: 0;
+  width: 8%;
+  background-color: var(--el-primary-color);
+}
+
 .setting-page .el-input-group__append .el-input__wrapper {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;

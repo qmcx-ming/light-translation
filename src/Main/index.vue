@@ -1,7 +1,7 @@
 <script lang="js" setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { translate, audio } from '../translate';
-import { getItem, setItem } from '../utils/db';
+import { translate, audio, detectLanguageZh } from '../translate';
+import { getConfig, setConfig, engineList, getEngineName } from '../utils/config';
 import { showMessage } from '../utils/common';
 
 import SettingPage from '../components/SettingPage/index.vue';
@@ -24,7 +24,7 @@ const props = defineProps({
 
 const textRef = ref();
 const languages = ref([]);
-const config = ref(getItem('config'));
+let config = getConfig();
 
 onMounted(async () => {
   await setLanguage();
@@ -58,31 +58,14 @@ const hidePopover = () => {
   arrowLeft.value.style.transform = 'rotate(0deg)';
 }
 
-const engine = ref(getItem('config').translateEngine);
-
-const engineList = ref([
-  {
-    id: 'google',
-    name: '谷歌翻译',
-  },
-  {
-    id: 'baidu',
-    name: '百度翻译',
-  },
-  {
-    id: 'alibaba',
-    name: '阿里翻译',
-  },
-  {
-    id: 'tencent',
-    name: '腾讯翻译',
-  }
-]);
+const engine = ref(config.translateEngine);
 
 const changeEngine = async (engineId) => {
   engine.value = engineId;
-  config.value.translateEngine = engineId;
-  setItem('config', config.value);
+  config.translateEngine = engineId;
+  console.log(config);
+  
+  setConfig(config);
   await setLanguage();
   from.value = languages.value[0].code;
   to.value = languages.value[1].code;
@@ -95,18 +78,18 @@ const settingUpdate = (cfg) => {
   to.value = languages.value[1].code;
   googleUrl.value = cfg.googleUrl
   engine.value = cfg.translateEngine;
-  config.value = cfg;
+  config = cfg;
 }
 
 watch(settingOpen, (val) => {
   if(val) {
     window.removeEventListener('copy', copyResult);
   } else {
-    if(config.value.copyKey) window.addEventListener('copy', copyResult);
+    if(config.copyKey) window.addEventListener('copy', copyResult);
   }
 });
 
-const googleUrl = ref(getItem('config').googleUrl);
+const googleUrl = ref(config.googleUrl);
 const isLoading = ref(false);
 
 const text = ref('');
@@ -148,10 +131,10 @@ const toTranslate = () => {
   }
   result.value = '正在翻译中...';
   isLoading.value = true;
-  autoChange();
-  const { id, key } = config.value[engine.value] || { id: 'xxx', key: 'xxx' };
+  to.value = autoChange(text.value, to.value, languages.value);
+  const { id, key } = config[engine.value] || { id: 'xxx', key: 'xxx' };
   if(!id || !key) {
-    showMessage(`请先检查${engineList.value.find(item=> item.id === engine.value).name}配置是否完善`, 'error');
+    showMessage(`请先检查「${getEngineName(engine.value)}」配置是否完善`, 'error');
     clearText(false);
     isLoading.value = false;
     return;
@@ -182,16 +165,17 @@ const toTranslate = () => {
 }
 
 // 一个简单的中英文语种自动切换
-const autoChange = async () => {
+const autoChange = (text, to, languages) => {
   // 在语言表中，索引为1的是中文，索引为2的是英文
   // 判断text是否为中文
-  if(/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === languages.value[1].code) {
-    to.value = languages.value[2].code;
+  if(detectLanguageZh(text) && to === languages[1].code) {
+    return languages[2].code;
   }
   // 判断text是否为英文
-  if(!/[\u4e00-\u9fa5]/gm.test(text.value) && to.value === languages.value[2].code) {
-    to.value = languages.value[1].code;
+  if(!detectLanguageZh(text) && to === languages[2].code) {
+    return languages[1].code;
   }
+  return to;
 }
 
 // 处理词典和例句
@@ -277,7 +261,7 @@ const copyResult = () => {
   showMessage('已复制到剪切板');
 }
 
-if(config.value.copyKey) {
+if(config.copyKey) {
   window.addEventListener('copy', copyResult);
 }
 

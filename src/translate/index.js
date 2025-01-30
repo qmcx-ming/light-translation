@@ -2,7 +2,7 @@ import { googleTranslate } from './google';
 import { baiduTranslate } from './baidu';
 import { alibabaTranslate } from './alibaba';
 import { tencentTranslate } from './tencent';
-import { translationEngines, ErrorMessage } from './request';
+import { translationEngines, ErrorMessage, detectLanguageZh } from './request';
 import voiceList from './voices';
 
 /**
@@ -125,5 +125,6 @@ function isEmpty(str) {
 
 export {
 	translate,
-	audio
+	audio,
+	detectLanguageZh
 }
