@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { translate, audio, detectLanguageZh } from '../translate';
 import { getConfig, setConfig, engineList, getEngineName } from '../utils/config';
+import { getHistory, setHistory } from '../utils/history';
 import { showMessage } from '../utils/common';
 
 import SettingPage from '../components/SettingPage/index.vue';
@@ -9,6 +10,7 @@ import LangSelect from '../components/LangSelect/index.vue';
 import MoreButton from '../components/MoreButton/index.vue';
 import Quote from '../components/Quote/index.vue';
 import BottomPopover from '../components/BottomPopover/index.vue';
+import TranslateHistory from '../components/TranslateHistory/index.vue';
 
 const props = defineProps({
   // 选中文本
@@ -122,7 +124,7 @@ const toTranslate = () => {
   }
   result.value = '正在翻译中...';
   isLoading.value = true;
-  to.value = autoChange(text.value, to.value, languages.value);
+  to.value = autoChange(text.value, from.value, to.value, languages.value);
   const { id, key } = config[engine.value] || { id: 'xxx', key: 'xxx' };
   if(!id || !key) {
     showMessage(`请先检查「${getEngineName(engine.value)}」配置是否完善`, 'error');
@@ -150,6 +152,7 @@ const toTranslate = () => {
       detectLang.value = languages.value.find(item => item.code === res.from);
     soundEnable('from', true, fromSoundWrapper.value);
     soundEnable('to', true, toSoundWrapper.value);
+    changeHistory({ name: text.value });
   }).catch(err => {
     console.log(err);
     showMessage(err.error, 'error');
@@ -158,10 +161,10 @@ const toTranslate = () => {
 }
 
 // 一个简单的中英文语种自动切换
-const autoChange = (text, to, languages) => {
+const autoChange = (text, from, to, languages) => {
   // 在语言表中，索引为1的是中文，索引为2的是英文
   // 判断text是否为中文
-  if(detectLanguageZh(text) && to === languages[1].code) {
+  if(detectLanguageZh(text) && to === languages[1].code && from !== 'wyw') {
     return languages[2].code;
   }
   // 判断text是否为英文
@@ -343,6 +346,30 @@ watch(isPlaying.value, (newVal) => {
     }
   })
 })
+
+const changeHistory = (history) => {
+  // 不保存历史记录
+  if(config.historyMax === 0) {
+    return;
+  }
+  const historyList = getHistory() || [];
+  const index = historyList.findIndex(item => item.name === history.name);
+  // 如果找到相同，清除旧的历史记录
+  if (index !== -1) {
+    historyList.splice(index, 1);
+  }
+  // 如果超过n条，删除最后一条
+  if (historyList.length >= config.historyMax) {
+    historyList.pop();
+  }
+  historyList.unshift(history);
+  setHistory(historyList);
+}
+
+const handlerHistory = (history) => {
+  text.value = history.name;
+  toTranslate();
+}
 </script>
 
 <template>
@@ -391,13 +418,16 @@ watch(isPlaying.value, (newVal) => {
               <div class="from-phonetic">{{ fromPhonetic }}</div>
             </el-tooltip>
           </div>
-          <svg-icon
-            class-name="delete-icon"
-            icon-name="icon-delete"
-            size="var(--icon-size)"
-            color="var(--icon-color)"
-            @click="clearText"
-          />
+          <div class="textarea-toolbar-right">
+            <translate-history @translate="handlerHistory" />
+            <svg-icon
+              class-name="delete-icon"
+              icon-name="icon-delete"
+              size="var(--icon-size)"
+              color="var(--icon-color)"
+              @click="clearText"
+            />
+          </div>
         </div>
       </div>
       <div class="mh center-feture">
@@ -567,7 +597,7 @@ body {
   z-index: 1;
 }
 
-.textarea-toolbar-left {
+.textarea-toolbar-left, .textarea-toolbar-right {
   display: flex;
 }
 
@@ -599,14 +629,18 @@ body {
   user-select: none;
 }
 
-.delete-icon {
+.delete-icon, .clock-icon {
   margin-right: 6px;
   cursor: pointer;
   transition: opacity 0.3s;
 }
 
 .delete-icon:hover {
-  opacity: 0.8;
+  opacity: 0.7;
+}
+
+.clock-icon:hover {
+  opacity: 0.7;
 }
 
 .logo {

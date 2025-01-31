@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, reactive } from 'vue';
 import { init } from '../../utils/db';
 import { getConfig, setConfig, engineList } from '../../utils/config';
 import { showMessage } from '../../utils/common';
@@ -13,17 +13,47 @@ const props = defineProps({
 
 const emit = defineEmits(['update:settingOpen', 'update:config']);
 
+const ruleFormRef = ref();
+const rules = reactive({
+  googleUrl: [
+    {
+      required: true,
+      message: '请输入谷歌翻译服务器地址',
+      trigger: 'blur',
+    },
+    {
+      message: '谷歌翻译服务器格式错误',
+      trigger: 'blur',
+      pattern: /^(http|https):\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(\/\S*)?$/,
+    }
+  ],
+  historyMax: [
+    {
+      required: true,
+      message: '请输入翻译记录最大条数',
+      trigger: 'blur'
+    }
+  ]
+});
+
 const closeDrawer = () => {
   emit('update:settingOpen', false);
 };
 
 const form = ref(getConfig());
 
-const saveData = () => {
-  setConfig(form.value);
-  emit('update:settingOpen', false);
-  emit('update:config', form.value);
-  showMessage('保存成功');
+const saveData = (formEl) => {
+  if(!formEl) return;
+  formEl.validate(valid => {
+    if (valid) {
+      setConfig(form.value);
+      emit('update:settingOpen', false);
+      emit('update:config', form.value);
+      showMessage('保存成功');
+    } else {
+      console.log('error submit!')
+    }
+  })
 };
 
 const openMessageBox = () => {
@@ -87,7 +117,9 @@ const speedTest = async () => {
       : '测试失败';
     confirmSpeedTest(msg);
   } catch (err) {
-    confirmSpeedTest('测试失败，无法连接到服务器 <font color="red">Error</font>');
+    confirmSpeedTest(
+      '测试失败，无法连接到服务器 <font color="red">Error</font>'
+    );
   } finally {
     loading.close();
   }
@@ -105,7 +137,7 @@ const confirmSpeedTest = (msg) => {
 <template>
   <div class="setting-page">
     <div class="setting-page-content">
-      <el-form :model="form">
+      <el-form :model="form" :rules="rules" ref="ruleFormRef">
         <h4>翻译配置</h4>
         <el-form-item label="翻译引擎">
           <el-select
@@ -126,6 +158,7 @@ const confirmSpeedTest = (msg) => {
         <el-form-item
           label="谷歌翻译"
           v-show="form.translateEngine === 'google'"
+          prop="googleUrl"
         >
           <el-input
             class="config-google-url"
@@ -262,12 +295,22 @@ const confirmSpeedTest = (msg) => {
             >
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="翻译记录" prop="historyMax">
+          <el-input-number
+            v-model="form.historyMax"
+            controls-position="right"
+            :min="0"
+          ></el-input-number>
+          <el-text style="margin-left: 10px" size="small">
+            最多保留翻译记录数，0为不保留，超出将自动删除最旧记录
+          </el-text>
+        </el-form-item>
       </el-form>
     </div>
     <div class="drawer-footer">
       <el-button @click="openMessageBox" type="danger">重置所有数据</el-button>
       <el-button @click="closeDrawer" plain>关闭</el-button>
-      <el-button type="primary" @click="saveData">保存</el-button>
+      <el-button type="primary" @click="saveData(ruleFormRef)">保存</el-button>
     </div>
   </div>
 </template>

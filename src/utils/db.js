@@ -14,7 +14,8 @@ const data = {
     key: ''
   },
   // 是否开启复制快捷键，默认开启
-  copyKey: true
+  copyKey: true,
+  historyMax: 50,
 }
 
 /**
