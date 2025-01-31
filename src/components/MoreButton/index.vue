@@ -5,44 +5,51 @@ const props = defineProps({
   text: {
     type: String,
     required: true,
-    default: ''
+    default: '',
   },
   from: {
     type: String,
     required: true,
-    default: ''
+    default: '',
   },
   to: {
     type: String,
     required: true,
-    default: ''
+    default: '',
   },
   googleUrl: {
     type: String,
-    default: ''
-  }
-})
+    default: '',
+  },
+});
 
 const openLink = (command) => {
   let url = 'https://translate.google.com';
   const { text, from, to, googleUrl } = props;
-  if(!text) {
+  if (!text) {
     showMessage('请先输入要翻译的内容', 'error');
     return;
   }
   switch (command) {
     case 'google':
-      url = (googleUrl ? googleUrl : url) + `?sl=${from}&tl=${to}&text=${text}&op=translate`;
+      url =
+        (googleUrl ? googleUrl : url) +
+        `?sl=${from}&tl=${to}&text=${text}&op=translate`;
       break;
     case 'baidu':
-    url = `https://fanyi.baidu.com/mtpe-individual/multimodal?query=${text}&lang=${from}2${to}`;
+      url = `https://fanyi.baidu.com/mtpe-individual/multimodal?query=${text}&lang=${from}2${to}`;
       break;
     case 'youdao':
       url = `https://www.youdao.com/result?word=${text}&lang=en`;
       break;
+    case 'sogou':
+      // 匹配to开头为zh的
+      const transTo = to.match(/^zh/) ? 'zh-CHS' : to;
+      url = `https://fanyi.sogou.com/text?keyword=${text}&transfrom=auto&transto=${transTo}&model=general`;
+      break;
   }
   window.utools.ubrowser.goto(url).show().run({ width: 1000, height: 600 });
-}
+};
 </script>
 <template>
   <div class="more-button">
@@ -53,6 +60,7 @@ const openLink = (command) => {
           <el-dropdown-item command="baidu">百度</el-dropdown-item>
           <el-dropdown-item command="google">谷歌</el-dropdown-item>
           <el-dropdown-item command="youdao">有道</el-dropdown-item>
+          <el-dropdown-item command="sogou">搜狗</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>

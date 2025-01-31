@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { translate, audio, detectLanguageZh } from '../translate';
 import { getConfig, setConfig, engineList, getEngineName } from '../utils/config';
 import { getHistory, setHistory } from '../utils/history';
-import { showMessage } from '../utils/common';
+import { showMessage, $ } from '../utils/common';
 
 import SettingPage from '../components/SettingPage/index.vue';
 import LangSelect from '../components/LangSelect/index.vue';
@@ -327,10 +327,6 @@ const playAudio = async (id) => {
     .catch(err => {
       showMessage(err.error, 'error');
     });
-}
-
-const $ = (el) => {
-  return document.querySelector(el);
 }
 
 // 监听isPlaying变化

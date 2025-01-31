@@ -15,3 +15,4 @@
 
 - [腾讯云-谷歌翻译镜像合集](https://cloud.tencent.com/developer/news/1478660)
 - [Google谷歌翻译免费镜像站点合集 - 简书](https://www.jianshu.com/p/ac66372a6922)
+- [申请教程](https://blog.csdn.net/weixin_44253490/article/details/126365385)

@@ -38,6 +38,7 @@ const rules = reactive({
 
 const closeDrawer = () => {
   emit('update:settingOpen', false);
+  ruleFormRef.value.resetFields();
 };
 
 const form = ref(getConfig());
@@ -137,7 +138,7 @@ const confirmSpeedTest = (msg) => {
 <template>
   <div class="setting-page">
     <div class="setting-page-content">
-      <el-form :model="form" :rules="rules" ref="ruleFormRef">
+      <el-form :model="form" :rules="rules" ref="ruleFormRef" :hide-required-asterisk="true">
         <h4>翻译配置</h4>
         <el-form-item label="翻译引擎">
           <el-select
@@ -302,7 +303,7 @@ const confirmSpeedTest = (msg) => {
             :min="0"
           ></el-input-number>
           <el-text style="margin-left: 10px" size="small">
-            最多保留翻译记录数，0为不保留，超出将自动删除最旧记录
+            最多保留翻译记录数，超出将自动删除最旧记录，0为不保留
           </el-text>
         </el-form-item>
       </el-form>

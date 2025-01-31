@@ -130,11 +130,11 @@ const dictMoreShow = (meaning) => {
         <div v-if="example && example.length">
           <div class="example-text">示例</div>
           <p v-for="(item, index) in example" :key="index" class="example-item">
-            <span v-html="'📚 ' + item" v-show="index < 3 || exampleAll"></span>
+            <span v-html="'📚 ' + item" v-show="index < 1 || exampleAll"></span>
           </p>
           <span
             class="more-show"
-            v-show="example.length > 3 && !exampleAll"
+            v-show="example.length > 1 && !exampleAll"
             @click="exampleAll = true"
           >
             显示全部{{ example.length }}个示例
@@ -175,10 +175,6 @@ const dictMoreShow = (meaning) => {
 .example-text {
   font-weight: bold;
   font-style: italic;
-  margin-top: 5px;
-}
-
-.example-text {
   margin-top: 5px;
 }
 
