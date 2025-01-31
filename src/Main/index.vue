@@ -7,7 +7,8 @@ import { showMessage } from '../utils/common';
 import SettingPage from '../components/SettingPage/index.vue';
 import LangSelect from '../components/LangSelect/index.vue';
 import MoreButton from '../components/MoreButton/index.vue';
-import Quote from '../components/Quote/index.vue'
+import Quote from '../components/Quote/index.vue';
+import BottomPopover from '../components/BottomPopover/index.vue';
 
 const props = defineProps({
   // 选中文本
@@ -36,6 +37,7 @@ onMounted(async () => {
   if(props.show) {
     textRef.value.focus();
   }
+  window.utools.setExpendHeight(550);
 })
 
 const setLanguage = async () => {
@@ -44,19 +46,7 @@ const setLanguage = async () => {
   languages.value = module.default;
 }
 
-const arrowLeft = ref();
 const iptRows = ref(15);// 输入框默认行数
-const autoFocus = ref(false);// 输入框是否自动获取焦点
-
-const showPopover = () => {
-  // 图标逆时针旋转90度
-  arrowLeft.value.style.transform = 'rotate(-90deg)';
-}
-
-const hidePopover = () => {
-  // 图标还原
-  arrowLeft.value.style.transform = 'rotate(0deg)';
-}
 
 const engine = ref(config.translateEngine);
 
@@ -64,7 +54,7 @@ const changeEngine = async (engineId) => {
   engine.value = engineId;
   config.translateEngine = engineId;
   console.log(config);
-  
+
   setConfig(config);
   await setLanguage();
   from.value = languages.value[0].code;
@@ -102,7 +92,8 @@ const detectLang = ref({
   name: '',
   code: ''
 });
-const dictAndExample = ref('');
+const dict = ref([]);
+const example = ref([]);
 
 const toLanguages = computed(() => {
   // 排除auto
@@ -147,11 +138,13 @@ const toTranslate = () => {
     if(engine.value === 'google') {
       fromPhonetic.value = res.detail.fromPhonetic;
       toPhonetic.value = res.detail.toPhonetic;
-      handleDictAndExample(res.detail);
+      dict.value = res.detail.dict;
+      example.value = res.detail.example;
     } else {
       fromPhonetic.value = '';
       toPhonetic.value = '';
-      dictAndExample.value = '';
+      dict.value = [];
+      example.value = [];
     }
     if(from.value === 'auto')
       detectLang.value = languages.value.find(item => item.code === res.from);
@@ -178,32 +171,6 @@ const autoChange = (text, to, languages) => {
   return to;
 }
 
-// 处理词典和例句
-const handleDictAndExample = (detail) => {
-  const { dict, example } = detail;
-  let str = '';
-  if(dict.length > 0) {
-    str = dict.map(item => `
-      <div class="category-name">${item.category}</div>
-      <div class="category-content">
-          ${item.meaning.map(mean => `
-              <div class="category-meaning">${mean[0]}</div>
-              <div class="category-meaning">
-                ${mean[1].join('<span class="comma">,</span> ')}
-              </div>
-          `).join('')}
-      </div>`).join('');
-  }
-  if(example.length > 0) {
-    str += `
-    <div class="example-text">示例</div>
-    ${example.map(item => `<p class="example-item">${item}</p>`).join('')}
-    `;
-  }
-
-  dictAndExample.value = str;
-}
-
 const clearText = (isText = true) => {
   if(isText) {
     text.value = '';
@@ -211,7 +178,8 @@ const clearText = (isText = true) => {
   result.value = '';
   fromPhonetic.value = '';
   toPhonetic.value = '';
-  dictAndExample.value = '';
+  dict.value = [];
+  example.value = [];
   detectLang.value = {
     name: '',
     code: ''
@@ -250,6 +218,12 @@ const exchangeLang = () => {
     const nextIndex = (currentIndex + 1) % toLangList.length;
     to.value = toLangList[nextIndex].code;
   }
+}
+
+// 点击词典触发
+const handleMeanClick = (item) => {
+  text.value = item;
+  toTranslate();
 }
 
 const copyResult = () => {
@@ -395,7 +369,6 @@ watch(isPlaying.value, (newVal) => {
           resize="none"
           :input-style="{ paddingBottom: '30px' }"
           @keydown="handleKeydown"
-          :autofocus="autoFocus"
         />
         <div class="textarea-toolbar">
           <div class="textarea-toolbar-left">
@@ -478,38 +451,12 @@ watch(isPlaying.value, (newVal) => {
       </div>
     </div>
     <!-- 底部更多 -->
-    <el-popover
-      placement="top"
-      :width="740"
-      trigger="click"
-      :show-arrow="false"
-      @before-enter="showPopover"
-      @before-leave="hidePopover"
-      :disabled="dictAndExample.length === 0"
-    >
-      <template #reference>
-        <div class="bottom-more">
-          <svg-icon
-            :class="isLoading ? 'loading-icon loading' : 'loading-icon'"
-            icon-name="icon-loading"
-            size="var(--icon-size)"
-            color="var(--icon-color)"
-          />
-          <span
-            ref="arrowLeft"
-            :style="{ opacity: dictAndExample.length === 0 ? 0 : 1 }"
-            class="arrow-left"
-            >▶</span
-          >
-        </div>
-      </template>
-      <template #default>
-        <div
-          style="max-height: 300px; overflow: auto"
-          v-html="dictAndExample"
-        ></div>
-      </template>
-    </el-popover>
+    <bottom-popover
+      :is-loading="isLoading"
+      :dict="dict"
+      :example="example"
+      @handle-mean-click="handleMeanClick"
+    />
     <!-- 一言 -->
     <quote @translate-quote="translateQuote" />
 
@@ -645,7 +592,6 @@ body {
 
 .sound-icon {
   margin-left: 8px;
-  opacity: 0.6;
   pointer-events: none;
   transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
   /* 弹性曲线 */
@@ -656,6 +602,11 @@ body {
 .delete-icon {
   margin-right: 6px;
   cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.delete-icon:hover {
+  opacity: 0.8;
 }
 
 .logo {
@@ -669,25 +620,10 @@ body {
   justify-content: space-between;
 }
 
-/* 底部更多区域 */
-.bottom-more {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  border: 1px solid var(--el-border-color);
-  cursor: pointer;
-  /* 不可选中 */
-  user-select: none;
-}
-
-.arrow-right {
-  transition: all 0.3s;
-}
-
 .footer-toolbar {
   position: fixed;
   bottom: 5px;
-  right: 10px;
+  right: 5px;
 }
 
 .footer-toolbar .engine-icon {
@@ -706,23 +642,5 @@ body {
 
 .engine-selected .el-text {
   color: var(--el-color-primary);
-}
-
-/* 词典和例句 */
-/* 逗号 */
-.comma {
-  color: #2196f3;
-  margin: 0 5px 0 2px;
-}
-
-.category-content,
-.example-item {
-  text-indent: 1em;
-}
-
-.category-name,
-.example-text {
-  font-weight: bold;
-  font-style: italic;
 }
 </style>

@@ -12,14 +12,11 @@ import { handlerGoogleData } from './g-utils';
  */
 async function googleTranslate(text, url, from, to, original) {
 	const TRANSLATION_API_PATH = '/translate_a/single'; // t
-	// const { from, to } = getLanguagePair(text);
 	// 去除 / 如 https://baidu.com/ -> https://baidu.com
 	const DEFAULT_GOOGLE_API_SERVER_URL = url.replace(/\/$/, '');
-	console.log(DEFAULT_GOOGLE_API_SERVER_URL);
 	
 	const tkk = await getValue(DEFAULT_GOOGLE_API_SERVER_URL);
 	if(!tkk) return Promise.reject(new ErrorMessage('google', 'TKK更新失败, 请检查网络连接'));
-	console.log(tkk);
 
 	const params = {
 		client: 'gtx',

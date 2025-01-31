@@ -72,11 +72,22 @@ const speedTest = async () => {
   let url = new URL(form.value.googleUrl);
   url.pathname = '/translate_a/element.js';
   try {
+    const startTime = performance.now(); // 开始时间
     const res = await fetch(url);
-    const msg = res.ok ? '测试成功' : '测试失败';
+    const endTime = performance.now(); // 结束时间
+    const responseTime = (endTime - startTime).toFixed(2); // 响应时间
+    let color = '';
+    if (responseTime < 500) {
+      color = '#67c23a';
+    } else {
+      color = '#e6a23c';
+    }
+    const msg = res.ok
+      ? `测试成功 <font color="${color}">${responseTime}ms</font>`
+      : '测试失败';
     confirmSpeedTest(msg);
-  } catch(err) {
-    confirmSpeedTest('测试失败');
+  } catch (err) {
+    confirmSpeedTest('测试失败，无法连接到服务器 <font color="red">Error</font>');
   } finally {
     loading.close();
   }
@@ -87,8 +98,9 @@ const confirmSpeedTest = (msg) => {
     confirmButtonText: '确定',
     type: 'info',
     showCancelButton: false,
-  });
-}
+    dangerouslyUseHTMLString: true,
+  }).catch(() => {});
+};
 </script>
 <template>
   <div class="setting-page">
@@ -128,9 +140,7 @@ const confirmSpeedTest = (msg) => {
               />
             </template>
             <template #append>
-              <button class="test-btn" @click="speedTest">
-                测试
-              </button>
+              <button class="test-btn" @click="speedTest">测试</button>
             </template>
           </el-input>
           <el-text size="small"

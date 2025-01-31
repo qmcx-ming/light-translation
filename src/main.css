@@ -56,7 +56,6 @@ body {
 .config-google-url .el-input-group__append {
   padding: 0;
   width: 8%;
-  background-color: var(--el-primary-color);
 }
 
 .setting-page .el-input-group__append .el-input__wrapper {
@@ -69,6 +68,8 @@ body {
     --icon-color: #000000;
     --input-grepend-bg: #ffffff;
     --input-append-bg: #ffffff;
+    --color: #000000;
+    --more-show-bg: rgba(0, 0, 0, 0.1);
   }
   body {
     background-color: #ffffff;
@@ -88,6 +89,8 @@ body {
     --icon-color: #ffffff;
     --input-grepend-bg: #262727;
     --input-append-bg: #141414;
+    --color: #ffffff;
+    --more-show-bg: rgba(255, 255, 255, 0.1);;
   }
   &::-webkit-scrollbar-track-piece {
     background-color: #303133;
