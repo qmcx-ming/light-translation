@@ -1,5 +1,5 @@
 <script lang="js" setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { translate, audio, detectLanguageZh } from '../translate';
 import { getConfig, setConfig, engineList, getEngineName } from '../utils/config';
 import { getHistory, setHistory } from '../utils/history';
@@ -40,6 +40,11 @@ onMounted(async () => {
     textRef.value.focus();
   }
   window.utools.setExpendHeight(550);
+  copyKeyListen();
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('copy', copyResult);
 })
 
 const setLanguage = async () => {
@@ -73,11 +78,18 @@ const settingUpdate = (cfg) => {
   config = cfg;
 }
 
+const copyKeyListen = () => {
+  window.removeEventListener('copy', copyResult); // 先清除已存在的监听
+  if (config.copyKey) {
+    window.addEventListener('copy', copyResult);
+  }
+};
+
 watch(settingOpen, (val) => {
   if(val) {
     window.removeEventListener('copy', copyResult);
   } else {
-    if(config.copyKey) window.addEventListener('copy', copyResult);
+    copyKeyListen();
   }
 });
 
@@ -231,15 +243,10 @@ const handleMeanClick = (item) => {
 
 const copyResult = () => {
   if(!result.value) {
-    showMessage('请先翻译一下', 'error');
     return;
   }
   window.utools.copyText(result.value);
   showMessage('已复制到剪切板');
-}
-
-if(config.copyKey) {
-  window.addEventListener('copy', copyResult);
 }
 
 const translateQuote = (quote) => {
