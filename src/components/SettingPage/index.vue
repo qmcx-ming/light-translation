@@ -24,7 +24,7 @@ const rules = reactive({
     {
       message: '谷歌翻译服务器格式错误',
       trigger: 'blur',
-      pattern: /^(http|https):\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(\/\S*)?$/,
+      pattern: /^https?:\/\/(([a-zA-Z0-9_-])+(\.)?)*(:\d+)?(\/((\.)?(\?)?=?&?[a-zA-Z0-9_-](\?)?)*)*$/i,
     }
   ],
   historyMax: [
