@@ -1,7 +1,7 @@
 import { createApp } from "vue";
-import "./main.css";
 import App from "./App.vue";
 import 'element-plus/theme-chalk/dark/css-vars.css';
+import "./main.css";
 import './assets/iconfont';
 import SvgIcon from './components/SvgIcon/index.vue'
 const app = createApp(App);

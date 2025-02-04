@@ -417,7 +417,7 @@ const handlerHistory = (history) => {
               />
             </div>
 
-            <el-tooltip :content="fromPhonetic" placement="top" effect="light">
+            <el-tooltip :content="fromPhonetic" placement="top" effect="light" popper-class="tooltip-class">
               <div class="from-phonetic">{{ fromPhonetic }}</div>
             </el-tooltip>
           </div>
@@ -470,7 +470,7 @@ const handlerHistory = (history) => {
                 :custom-style="{ opacity: toSound ? 1 : 0.6 }"
               />
             </div>
-            <el-tooltip :content="toPhonetic" placement="top" effect="light">
+            <el-tooltip :content="toPhonetic" placement="top" effect="light" popper-class="tooltip-class">
               <div class="to-phonetic">{{ toPhonetic }}</div>
             </el-tooltip>
           </div>
@@ -614,6 +614,10 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tooltip-class {
+  max-width: 200px;
 }
 
 .from-sound-wrapper,

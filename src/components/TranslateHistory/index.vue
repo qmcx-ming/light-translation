@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { getHistory, setHistory } from '../../utils/history';
 import { showMessage } from '../../utils/common';
 
@@ -7,8 +7,11 @@ const emit = defineEmits(['translate']);
 
 const hPopover = ref();
 const history = ref([]);
+const hPopoverVisible = ref(false);
 
-const showPopover = () => {
+const showPopover = (event) => {
+  event.stopPropagation();
+  hPopoverVisible.value = !hPopoverVisible.value;
   history.value = getHistory() || [];
 };
 
@@ -29,19 +32,74 @@ const delHistory = (index) => {
 
 const handleClick = (item) => {
   emit('translate', item);
-  hPopover.value.hide();
 };
+
+const searchText = ref('');
+
+const clearAll = (event) => {
+  // 阻止 popconfirm 默认的关闭行为
+  event.stopPropagation();
+  history.value = [];
+  setHistory(history.value);
+  showMessage('清空成功');
+  hPopoverVisible.value = true;
+};
+
+const handleCancel = (event) => {
+  // 阻止 popconfirm 默认的关闭行为
+  event.stopPropagation();
+
+  // 保持popover显示
+  hPopoverVisible.value = true;
+};
+
+const searchHistory = () => {
+  if (searchText.value) {
+    history.value = history.value.filter((item) => {
+      return item.name.includes(searchText.value);
+    });
+  } else {
+    history.value = getHistory() || [];
+  }
+}
+
+// 监听点击事件，点击外部关闭popover
+const handleClickOutside = (event) => {
+  // 判断点击的是否是删除图标或popover内部元素
+  const target = event.target;
+  if (
+    hPopover.value &&
+    !hPopover.value.$el.contains(target) &&
+    !target.closest('.history-toolbar') &&
+    !target.closest('.el-input__clear') &&
+    !target.closest('.del') &&
+    !target.closest('.no-history')
+  ) {
+    hPopoverVisible.value = false;
+  }
+};
+
+// 在组件挂载时添加监听
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+// 在组件卸载时移除监听
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
+
 <template>
   <div class="translate-history">
     <el-popover
+      :visible="hPopoverVisible"
       ref="hPopover"
       placement="top-start"
       width="250"
       trigger="click"
       transition="el-zoom-in-top"
       popper-style="padding: 5px;"
-      @before-enter="showPopover"
     >
       <template #reference>
         <svg-icon
@@ -49,10 +107,39 @@ const handleClick = (item) => {
           icon-name="icon-clock"
           size="var(--icon-size)"
           color="var(--icon-color)"
+          @click="showPopover"
         />
       </template>
       <template #default>
         <div class="history-list">
+          <div class="history-toolbar">
+            <el-input
+              class="search-input"
+              v-model="searchText"
+              size="small"
+              clearable
+              placeholder="回车搜索"
+              @keyup.enter="searchHistory"
+            />
+            <el-popconfirm
+              title="确定清空历史记录吗？"
+              cancel-button-text="取消"
+              confirm-button-text="确定"
+              @confirm="clearAll"
+              @cancel="handleCancel"
+            >
+              <template #reference>
+                <svg-icon
+                  class="del-all"
+                  icon-name="icon-delete"
+                  size="var(--icon-size)"
+                  color="var(--icon-color)"
+                  v-show="history.length"
+                  title="清空"
+                />
+              </template>
+            </el-popconfirm>
+          </div>
           <div
             class="history-item"
             v-for="(item, index) in history"
@@ -70,6 +157,7 @@ const handleClick = (item) => {
               class="del"
               v-show="showClose[index]"
               @click="delHistory(index)"
+              title="删除"
               >×</span
             >
           </div>
@@ -84,6 +172,22 @@ const handleClick = (item) => {
   max-height: 302px;
   overflow: auto;
 }
+
+.history-toolbar {
+  padding: 5px 10px;
+  background-color: #ffffff;
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.history-toolbar .del-all {
+  cursor: pointer;
+  /* margin-right: -4px; */
+}
+
 .history-item {
   display: flex;
   justify-content: space-between;
@@ -110,6 +214,8 @@ const handleClick = (item) => {
   border-radius: 50%;
   color: var(--color);
   cursor: pointer;
+  letter-spacing: normal;
+  transition: background-color 0.3s;
 }
 
 .del:hover {
@@ -123,5 +229,7 @@ const handleClick = (item) => {
 
 .no-history {
   text-align: center;
+  font-size: 12px;
+  user-select: none;
 }
 </style>
