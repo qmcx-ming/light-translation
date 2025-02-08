@@ -82,6 +82,7 @@ watch(
 
 const idKeys = ref({
   google: { id: 'API Key', key: 'API Secret' },
+  microsoft: { id: 'Client ID', key: 'Client Secret' },
   baidu: { id: 'APP ID', key: '密钥' },
   alibaba: { id: 'AccessKey ID', key: 'AccessKey Secret' },
   tencent: { id: 'SecretId', key: 'SecretKey' },
@@ -268,7 +269,7 @@ const confirmSpeedTest = (msg) => {
             </template>
           </el-input>
         </el-form-item>
-        <div class="engine-desc" v-show="form.translateEngine !== 'google'">
+        <div class="engine-desc" v-show="form.translateEngine !== 'google' && form.translateEngine !== 'microsoft'">
           <div class="desc-left">
             <el-text size="small" class="ik-tip">
               {{ idKeys[form.translateEngine].id }}

@@ -70,11 +70,12 @@ const changeEngine = async (engineId) => {
 
 const settingOpen = ref(false);
 
-const settingUpdate = (cfg) => {
+const settingUpdate = async (cfg) => {
+  engine.value = cfg.translateEngine;
+  await setLanguage();
   from.value = languages.value[0].code;
   to.value = languages.value[1].code;
-  googleUrl.value = cfg.googleUrl
-  engine.value = cfg.translateEngine;
+  googleUrl.value = cfg.googleUrl;
   config = cfg;
 }
 
@@ -333,6 +334,9 @@ const playAudio = async (id) => {
     })
     .catch(err => {
       showMessage(err.error, 'error');
+      // 重置
+      resetSound();
+      isPlaying.value[id - 1] = false;
     });
 }
 

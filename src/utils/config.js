@@ -18,6 +18,10 @@ export const engineList = [
     name: '谷歌翻译',
   },
   {
+    id: 'microsoft',
+    name: '微软翻译',
+  },
+  {
     id: 'baidu',
     name: '百度翻译',
   },

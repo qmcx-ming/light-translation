@@ -2,6 +2,7 @@ import { googleTranslate } from './google';
 import { baiduTranslate } from './baidu';
 import { alibabaTranslate } from './alibaba';
 import { tencentTranslate } from './tencent';
+import { msTranslate } from './microsoft';
 import { translationEngines, ErrorMessage, detectLanguageZh } from './request';
 import voiceList from './voices';
 
@@ -36,6 +37,8 @@ async function translate(text, engine = 'google', appId, secretKey, from = 'auto
 	switch (engine) {
 		case 'google':
 			return googleTranslate(text, url, from, to, original);
+		case 'microsoft':
+			return msTranslate(text, from, to);
 		case 'baidu':
 			return baiduTranslate(text, appId, secretKey, from, to, original);
 		case 'alibaba':
@@ -55,7 +58,7 @@ async function translate(text, engine = 'google', appId, secretKey, from = 'auto
  */
 function validate(text, appId, secretKey, engine, url) {
 	if (isEmpty(text)) return Promise.reject(new ErrorMessage(engine, '翻译内容不能为空'));
-	if (engine !== 'google') {
+	if (engine !== 'google' || engine !== 'microsoft') {
 		if (isEmpty(appId) || isEmpty(secretKey))
 			return Promise.reject(new ErrorMessage(engine, '应用ID 和密钥不能为空'));
 	} else {
