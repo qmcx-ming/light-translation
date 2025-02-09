@@ -1,5 +1,6 @@
-let cachedToken = null;
-let tokenExpireTime = 0; // 记录 token 的真实过期时间
+import { setConfig, getConfig } from '../../utils/tk-config';
+// let cachedToken = null;
+// let tokenExpireTime = 0; // 记录 token 的真实过期时间
 
 // 解析 Token 获取 `exp` 过期时间
 function parseTokenExpireTime(token) {
@@ -19,6 +20,9 @@ function parseTokenExpireTime(token) {
 
 async function getToken() {
   const currentTime = Date.now();
+  const config = getConfig();
+  let cachedToken = config.cachedToken;
+  let tokenExpireTime = config.tokenExpireTime;
 
   // 如果 Token 仍然有效，则直接返回
   if (cachedToken && currentTime < tokenExpireTime) {
@@ -33,6 +37,7 @@ async function getToken() {
     // 解析 `exp` 过期时间
     tokenExpireTime = parseTokenExpireTime(token);
     cachedToken = token; // 更新缓存
+    setConfig({ ...config, tokenExpireTime, cachedToken });
     console.log('token过期了，重新获取');
     return token;
   } catch (error) {
@@ -64,7 +69,7 @@ async function msTranslate(text, from, to) {
     );
 
     const data = await response.json();
-    console.log(JSON.stringify(data));
+    console.log(data);
 
     return {
       name: 'microsoft',
