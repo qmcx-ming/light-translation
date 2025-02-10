@@ -27,7 +27,7 @@ const props = defineProps({
 
 const textRef = ref();
 const languages = ref([]);
-let config = getConfig();
+let config = ref(getConfig());
 
 onMounted(async () => {
   await setLanguage();
@@ -55,14 +55,14 @@ const setLanguage = async () => {
 
 const iptRows = ref(15);// 输入框默认行数
 
-const engine = ref(config.translateEngine);
+const engine = ref(config.value.translateEngine);
 
 const changeEngine = async (engineId) => {
   engine.value = engineId;
-  config.translateEngine = engineId;
-  console.log(config);
+  config.value.translateEngine = engineId;
+  console.log(config.value);
 
-  setConfig(config);
+  setConfig(config.value);
   await setLanguage();
   from.value = languages.value[0].code;
   to.value = languages.value[1].code;
@@ -76,12 +76,12 @@ const settingUpdate = async (cfg) => {
   from.value = languages.value[0].code;
   to.value = languages.value[1].code;
   googleUrl.value = cfg.googleUrl;
-  config = cfg;
+  config.value = cfg;
 }
 
 const copyKeyListen = () => {
   window.removeEventListener('copy', copyResult); // 先清除已存在的监听
-  if (config.copyKey) {
+  if (config.value.copyKey) {
     window.addEventListener('copy', copyResult);
   }
 };
@@ -94,7 +94,7 @@ watch(settingOpen, (val) => {
   }
 });
 
-const googleUrl = ref(config.googleUrl);
+const googleUrl = ref(config.value.googleUrl);
 const isLoading = ref(false);
 
 const text = ref('');
@@ -138,7 +138,7 @@ const toTranslate = () => {
   result.value = '正在翻译中...';
   isLoading.value = true;
   to.value = autoChange(text.value, from.value, to.value, languages.value);
-  const { id, key } = config[engine.value] || { id: 'xxx', key: 'xxx' };
+  const { id, key } = config.value[engine.value] || { id: 'xxx', key: 'xxx' };
   if(!id || !key) {
     showMessage(`请先检查「${getEngineName(engine.value)}」配置是否完善`, 'error');
     clearText(false);
@@ -356,7 +356,7 @@ watch(isPlaying.value, (newVal) => {
 
 const changeHistory = (history) => {
   // 不保存历史记录
-  if(config.historyMax === 0) {
+  if(config.value.historyMax === 0) {
     return;
   }
   const historyList = getHistory() || [];
@@ -366,7 +366,7 @@ const changeHistory = (history) => {
     historyList.splice(index, 1);
   }
   // 如果超过n条，删除最后一条
-  if (historyList.length >= config.historyMax) {
+  if (historyList.length >= config.value.historyMax) {
     historyList.pop();
   }
   historyList.unshift(history);
@@ -377,6 +377,24 @@ const handlerHistory = (history) => {
   text.value = history.name;
   toTranslate();
 }
+
+// 判断翻译引擎是否可用(id或key是否不为空)
+const isEngineIdKey = (engine) => {
+  if(engine === 'google' || engine === 'microsoft') return true;
+  const cfg = config.value;
+  // 判断翻译引擎的id或key是否不为空
+  return cfg[engine] && cfg[engine].id && cfg[engine].key;
+}
+
+const processedEngineList = computed(() => {
+  console.log('更新数据');
+  return engineList.map(item => ({
+    ...item,
+    isDisabled: !isEngineIdKey(item.id),
+    titleText: !isEngineIdKey(item.id) ? item.name + '未激活' : '',
+    opacityStyle: !isEngineIdKey(item.id) ? 0.5 : 1
+  }));
+});
 </script>
 
 <template>
@@ -507,20 +525,23 @@ const handlerHistory = (history) => {
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item
-              v-for="(item, index) in engineList"
+              v-for="(item, index) in processedEngineList"
               :key="index"
               :class="{
                 'engine-item': true,
                 'engine-selected': item.id === engine,
               }"
               @click="changeEngine(item.id)"
+              :disabled="item.isDisabled"
+              :title="item.titleText"
             >
               <img
                 class="icon"
                 :src="`./icons/engine/${item.id}.svg`"
                 alt="图标"
+                :style="{ opacity: item.opacityStyle }"
               />
-              <span>{{ item.name }}</span>
+              <span class="text">{{ item.name }}</span>
             </el-dropdown-item>
             <el-dropdown-item
               class="engine-item"
@@ -685,7 +706,7 @@ body {
   background-color: var(--el-color-primary-light-9);
 }
 
-.engine-selected .el-text {
+.engine-selected .text {
   color: var(--el-color-primary);
 }
 </style>

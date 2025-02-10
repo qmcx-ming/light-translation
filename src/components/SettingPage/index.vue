@@ -45,6 +45,14 @@ const form = ref(getConfig());
 
 const saveData = (formEl) => {
   if(!formEl) return;
+  // 当前使用的翻译引擎的id和key不为空
+  const engine = form.value.translateEngine;
+  if(engine !== 'google' && engine !== 'microsoft') {
+    if(!form.value[engine].id || !form.value[engine].key) {
+      showMessage('当前使用的翻译引擎id和key不能为空', 'error');
+      return;
+    }
+  }
   formEl.validate(valid => {
     if (valid) {
       setConfig(form.value);
