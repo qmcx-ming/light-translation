@@ -24,16 +24,17 @@ const rules = reactive({
     {
       message: '谷歌翻译服务器格式错误',
       trigger: 'blur',
-      pattern: /^https?:\/\/(([a-zA-Z0-9_-])+(\.)?)*(:\d+)?(\/((\.)?(\?)?=?&?[a-zA-Z0-9_-](\?)?)*)*$/i,
-    }
+      pattern:
+        /^https?:\/\/(([a-zA-Z0-9_-])+(\.)?)*(:\d+)?(\/((\.)?(\?)?=?&?[a-zA-Z0-9_-](\?)?)*)*$/i,
+    },
   ],
   historyMax: [
     {
       required: true,
       message: '请输入翻译记录最大条数',
-      trigger: 'blur'
-    }
-  ]
+      trigger: 'blur',
+    },
+  ],
 });
 
 const closeDrawer = () => {
@@ -44,25 +45,25 @@ const closeDrawer = () => {
 const form = ref(getConfig());
 
 const saveData = (formEl) => {
-  if(!formEl) return;
+  if (!formEl) return;
   // 当前使用的翻译引擎的id和key不为空
   const engine = form.value.translateEngine;
-  if(engine !== 'google' && engine !== 'microsoft') {
-    if(!form.value[engine].id || !form.value[engine].key) {
+  if (engine !== 'google' && engine !== 'microsoft') {
+    if (!form.value[engine].id || !form.value[engine].key) {
       showMessage('当前使用的翻译引擎id和key不能为空', 'error');
       return;
     }
   }
-  formEl.validate(valid => {
+  formEl.validate((valid) => {
     if (valid) {
       setConfig(form.value);
       emit('update:settingOpen', false);
       emit('update:config', form.value);
       showMessage('保存成功');
     } else {
-      console.log('error submit!')
+      console.log('error submit!');
     }
-  })
+  });
 };
 
 const openMessageBox = () => {
@@ -147,7 +148,12 @@ const confirmSpeedTest = (msg) => {
 <template>
   <div class="setting-page">
     <div class="setting-page-content">
-      <el-form :model="form" :rules="rules" ref="ruleFormRef" :hide-required-asterisk="true">
+      <el-form
+        :model="form"
+        :rules="rules"
+        ref="ruleFormRef"
+        :hide-required-asterisk="true"
+      >
         <h4>翻译配置</h4>
         <el-form-item label="翻译引擎">
           <el-select
@@ -174,6 +180,7 @@ const confirmSpeedTest = (msg) => {
             class="config-google-url"
             v-model="form.googleUrl"
             placeholder="请输入谷歌翻译地址"
+            clearable
           >
             <template #prepend>
               <img
@@ -277,7 +284,13 @@ const confirmSpeedTest = (msg) => {
             </template>
           </el-input>
         </el-form-item>
-        <div class="engine-desc" v-show="form.translateEngine !== 'google' && form.translateEngine !== 'microsoft'">
+        <div
+          class="engine-desc"
+          v-show="
+            form.translateEngine !== 'google' &&
+            form.translateEngine !== 'microsoft'
+          "
+        >
           <div class="desc-left">
             <el-text size="small" class="ik-tip">
               {{ idKeys[form.translateEngine].id }}
@@ -314,6 +327,20 @@ const confirmSpeedTest = (msg) => {
           <el-text style="margin-left: 10px" size="small">
             最多保留翻译记录数，超出将自动删除最旧记录，0为不保留
           </el-text>
+        </el-form-item>
+        <el-form-item label="自动翻译">
+          <el-radio-group v-model="form.autoTranslate">
+            <el-radio :value="true">开启</el-radio>
+            <el-radio :value="false">关闭</el-radio>
+            <el-text size="small">
+              开启后，将<el-tooltip
+                content="🔖 自动翻译开启后，回车键翻译功能将不再生效"
+                placement="top"
+              >
+                <b>自动翻译</b> </el-tooltip
+              >输入的内容，否则需要手动点击翻译按钮或使用快捷键(Enter)
+            </el-text>
+          </el-radio-group>
         </el-form-item>
       </el-form>
     </div>

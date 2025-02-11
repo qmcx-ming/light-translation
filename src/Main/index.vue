@@ -205,10 +205,26 @@ const clearText = (isText = true) => {
 
 const handleKeydown = (e) => {
   // 回车翻译，不换行 shift + enter 换行
-  if (!e.shiftKey && e.keyCode == 13) {
+  if (!e.shiftKey && e.keyCode == 13 && !config.value.autoTranslate) {
 		e.preventDefault();
 		toTranslate();
 	}
+}
+
+let timeout = null;
+
+const handleInput = (text) => {
+  if(config.value.autoTranslate) {
+    clearTimeout(timeout);
+    // 去除空格
+    text = text.replace(/\s+/g, '');
+    timeout = setTimeout(() => {
+      if (text) {
+        console.log(text);
+        toTranslate();
+      }
+    }, 500);
+  }
 }
 
 const exchangeLang = () => {
@@ -387,7 +403,6 @@ const isEngineIdKey = (engine) => {
 }
 
 const processedEngineList = computed(() => {
-  console.log('更新数据');
   return engineList.map(item => ({
     ...item,
     isDisabled: !isEngineIdKey(item.id),
@@ -421,6 +436,7 @@ const processedEngineList = computed(() => {
           resize="none"
           :input-style="{ paddingBottom: '30px' }"
           @keydown="handleKeydown"
+          @input="handleInput"
         />
         <div class="textarea-toolbar">
           <div class="textarea-toolbar-left">
