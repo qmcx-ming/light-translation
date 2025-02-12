@@ -73,7 +73,8 @@ const handleClickOutside = (event) => {
     !target.closest('.history-toolbar') &&
     !target.closest('.el-input__clear') &&
     !target.closest('.del') &&
-    !target.closest('.no-history')
+    !target.closest('.no-history') &&
+    !target.closest('.history-length')
   ) {
     hPopoverVisible.value = false;
   }
@@ -163,14 +164,20 @@ onBeforeUnmount(() => {
           </div>
           <div v-show="!history.length" class="no-history">暂无数据</div>
         </div>
+        <div v-show="history.length" class="history-length">{{ history.length }}条记录</div>
       </template>
     </el-popover>
   </div>
 </template>
 <style scoped>
 .history-list {
-  max-height: 302px;
+  max-height: 288px;
   overflow: auto;
+}
+
+/* 隐藏滚动条 */
+.history-list::-webkit-scrollbar {
+  display: none;
 }
 
 .history-toolbar {
@@ -230,6 +237,15 @@ onBeforeUnmount(() => {
 .no-history {
   text-align: center;
   font-size: 12px;
+  user-select: none;
+}
+
+.history-length {
+  position: sticky;
+  text-align: right;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-top: 2px;
   user-select: none;
 }
 </style>

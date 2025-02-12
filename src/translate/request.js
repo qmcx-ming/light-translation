@@ -33,7 +33,8 @@ const translationEngines = {
 		// 专业版本
 		ecommerce: 'https://mt.aliyuncs.com/api/translate/web/ecommerce'
 	},
-	google: 'https://translate.google.com'
+	google: 'https://translate.google.com',
+	edgeTTS: 'https://microsoft-tts.qmcx-ming.top'
 }
 
 /**

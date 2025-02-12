@@ -331,8 +331,9 @@ const playAudio = async (id) => {
   const lang = id === 1 ? (from.value === 'auto' ? detectLang.value.code : from.value) : to.value;
   // 播放中
   isPlaying.value[id - 1] = true;
+  isLoading.value = true;
   // 获取音频数据
-  audio(txt, lang)
+  audio(txt, lang, null, 'ctrl-jntm')
     .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
     .then(ad => {
       const player = ctx.createBufferSource();
@@ -351,9 +352,11 @@ const playAudio = async (id) => {
     .catch(err => {
       showMessage(err.error, 'error');
       // 重置
-      resetSound();
+      // resetSound();
       isPlaying.value[id - 1] = false;
-    });
+    }).finally(() => {
+      isLoading.value = false;
+    }); 
 }
 
 // 监听isPlaying变化
