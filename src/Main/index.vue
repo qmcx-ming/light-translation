@@ -231,9 +231,15 @@ const handleKeydown = (e) => {
 	}
 }
 
+const handlePaste = async () => {
+  text.value = await navigator.clipboard.readText();
+  toTranslate();
+}
+
 let timeout = null;
 
 const handleInput = (text) => {
+  if(!text) clearText();
   if(config.value.autoTranslate) {
     clearTimeout(timeout);
     // 去除空格
@@ -455,11 +461,12 @@ const processedEngineList = computed(() => {
           v-model="text"
           :rows="iptRows"
           type="textarea"
-          placeholder="请输入要翻译的内容"
+          placeholder="请输入要翻译的内容，右键可以粘贴"
           resize="none"
           :input-style="{ paddingBottom: '30px' }"
           @keydown="handleKeydown"
           @input="handleInput"
+          @contextmenu="handlePaste"
         />
         <div class="textarea-toolbar">
           <div class="textarea-toolbar-left">
