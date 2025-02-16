@@ -115,6 +115,8 @@ const toLanguages = computed(() => {
   return languages.value.filter(item => item.code !== 'auto');
 })
 
+const autoSwitch = ref(true);
+
 const fromSelectChange = (val) => {
   from.value = val;
   if(val !== 'auto') {
@@ -123,11 +125,23 @@ const fromSelectChange = (val) => {
       code: ''
     }
   }
+  autoSwitch.value = val === 'auto';
 };
 
 const toSelectChange = (val) => {
   to.value = val;
+  autoSwitch.value = false;
 }
+
+const autoSwitchHandler = () => {
+  autoSwitch.value = !autoSwitch.value;
+}
+
+watch(autoSwitch, (val) => {
+  const message = val ? '开启自动切换语种' : '关闭自动切换语种';
+  const type = val ? 'success' : 'info';
+  showMessage(message, type);
+})
 
 const toTranslate = () => {
   if(!text.value) return;
@@ -137,7 +151,9 @@ const toTranslate = () => {
   }
   result.value = '正在翻译中...';
   isLoading.value = true;
-  to.value = autoChange(text.value, from.value, to.value, languages.value);
+  if(autoSwitch.value) {
+    to.value = autoChange(text.value, from.value, to.value, languages.value);
+  }
   const { id, key } = config.value[engine.value] || { id: 'xxx', key: 'xxx' };
   if(!id || !key) {
     showMessage(`请先检查「${getEngineName(engine.value)}」配置是否完善`, 'error');
@@ -184,6 +200,10 @@ const autoChange = (text, from, to, languages) => {
   if(!detectLanguageZh(text) && to === languages[2].code) {
     return languages[1].code;
   }
+  // TODO 有个缺陷，text=日文时，to切换为中文，会自动切换为英文
+  // 思路1：调用翻译api，判断text是什么语种，缺点：增加api调用次数
+  // 思路2【最优解】：给定配置，是否开启自动切换语种，
+  // 当用户手动切换语种时，关闭自动切换语种功能，优点：减少api调用次数
   return to;
 }
 
@@ -356,7 +376,7 @@ const playAudio = async (id) => {
       isPlaying.value[id - 1] = false;
     }).finally(() => {
       isLoading.value = false;
-    }); 
+    });
 }
 
 // 监听isPlaying变化
@@ -458,7 +478,12 @@ const processedEngineList = computed(() => {
               />
             </div>
 
-            <el-tooltip :content="fromPhonetic" placement="top" effect="light" popper-class="tooltip-class">
+            <el-tooltip
+              :content="fromPhonetic"
+              placement="top"
+              effect="light"
+              popper-class="tooltip-class"
+            >
               <div class="from-phonetic">{{ fromPhonetic }}</div>
             </el-tooltip>
           </div>
@@ -511,16 +536,37 @@ const processedEngineList = computed(() => {
                 :custom-style="{ opacity: toSound ? 1 : 0.6 }"
               />
             </div>
-            <el-tooltip :content="toPhonetic" placement="top" effect="light" popper-class="tooltip-class">
+            <el-tooltip
+              :content="toPhonetic"
+              placement="top"
+              effect="light"
+              popper-class="tooltip-class"
+            >
               <div class="to-phonetic">{{ toPhonetic }}</div>
             </el-tooltip>
           </div>
-          <more-button
-            :text="text"
-            :from="from"
-            :to="to"
-            :google-url="googleUrl"
-          />
+          <div class="textarea-toolbar-right">
+            <svg-icon
+              class-name="auto-switch"
+              icon-name="icon-auto-switch"
+              size="var(--icon-size)"
+              color="var(--icon-color)"
+              :custom-style="{
+                opacity: autoSwitch ? 1 : 0.3,
+                animation: autoSwitch
+                  ? 'rotateEffect 0.3s ease-in-out'
+                  : 'rotateEffectReverse 0.3s ease-in-out',
+              }"
+              title="自动切换语种"
+              @click="autoSwitchHandler"
+            />
+            <more-button
+              :text="text"
+              :from="from"
+              :to="to"
+              :google-url="googleUrl"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -644,8 +690,10 @@ body {
   z-index: 1;
 }
 
-.textarea-toolbar-left, .textarea-toolbar-right {
+.textarea-toolbar-left,
+.textarea-toolbar-right {
   display: flex;
+  align-items: center;
 }
 
 .from-phonetic,
@@ -680,7 +728,8 @@ body {
   user-select: none;
 }
 
-.delete-icon, .clock-icon {
+.delete-icon,
+.clock-icon {
   margin-right: 6px;
   cursor: pointer;
   transition: opacity 0.3s;
@@ -727,5 +776,29 @@ body {
 
 .engine-selected .text {
   color: var(--el-color-primary);
+}
+
+.auto-switch {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+@keyframes rotateEffect {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 反转 */
+@keyframes rotateEffectReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
 }
 </style>

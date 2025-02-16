@@ -171,7 +171,7 @@ onBeforeUnmount(() => {
 </template>
 <style scoped>
 .history-list {
-  max-height: 288px;
+  max-height: 285px;
   overflow: auto;
 }
 
@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
 .history-item {
   display: flex;
   justify-content: space-between;
-  padding: 5px 10px;
+  padding: 6px 10px;
   transition: all 0.3s;
   letter-spacing: 1px;
 }

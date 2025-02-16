@@ -46,6 +46,15 @@ function detectLanguageZh(word) {
 }
 
 /**
+ * 检测语言(是否为英文)
+ * @param {string} word 文本
+ */
+function detectLanguageEn(word) {
+	// 检测首字符是否为英文字母
+	return /^[a-zA-Z]/.test(word);
+}
+
+/**
  * 获取源语言以及目标语言
  * @param {Object} text 文本
  */
@@ -91,5 +100,6 @@ export {
 	translationEngines,
 	getLanguagePair,
 	detectLanguageZh,
+	detectLanguageEn,
 	ErrorMessage
 }

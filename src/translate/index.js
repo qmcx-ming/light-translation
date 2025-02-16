@@ -3,7 +3,7 @@ import { baiduTranslate } from './baidu';
 import { alibabaTranslate } from './alibaba';
 import { tencentTranslate } from './tencent';
 import { msTranslate } from './microsoft';
-import { translationEngines, ErrorMessage, detectLanguageZh } from './request';
+import { translationEngines, ErrorMessage, detectLanguageZh, detectLanguageEn } from './request';
 import voiceList from './voices';
 
 /**
@@ -142,5 +142,6 @@ function isEmpty(str) {
 export {
 	translate,
 	audio,
-	detectLanguageZh
+	detectLanguageZh,
+	detectLanguageEn
 }
