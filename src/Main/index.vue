@@ -126,11 +126,15 @@ const fromSelectChange = (val) => {
     }
   }
   autoSwitch.value = val === 'auto';
+  // 切换后，如果text有值，则重新翻译
+  if(text.value) { toTranslate(); }
 };
 
 const toSelectChange = (val) => {
   to.value = val;
   autoSwitch.value = false;
+  // 切换后，如果text有值，则重新翻译
+  if(text.value) { toTranslate(); }
 }
 
 const autoSwitchHandler = () => {
