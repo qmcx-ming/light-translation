@@ -3,6 +3,7 @@ import { ref, watch, reactive } from 'vue';
 import { init } from '../../utils/db';
 import { getConfig, setConfig, engineList } from '../../utils/config';
 import { showMessage } from '../../utils/common';
+import { translate } from '../../translate';
 
 const props = defineProps({
   settingOpen: {
@@ -108,13 +109,23 @@ const openLink = (id) => {
   window.utools.shellOpenExternal(url);
 };
 
+// 随机返回一个数组中的元素
+const randomText = () => {
+  const arr = [
+    'Hello', 'Hi', 'Nice', 'Good', 'Hey', 'Hiya', 
+    'World', 'Sing', 'Dance', 'Rap', 'Basketball'
+  ];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 const speedTest = async () => {
   const loading = ElLoading.service({ fullscreen: true, text: '测试中...' });
   let url = new URL(form.value.googleUrl);
-  url.pathname = '/translate_a/element.js';
   try {
     const startTime = performance.now(); // 开始时间
-    const res = await fetch(url);
+    const res = await translate(
+      randomText(), 'google', 'appId', 'secretKey', 'auto', 'zh-CN', url.href
+    );
     const endTime = performance.now(); // 结束时间
     const responseTime = (endTime - startTime).toFixed(2); // 响应时间
     let color = '';
@@ -123,7 +134,7 @@ const speedTest = async () => {
     } else {
       color = '#e6a23c';
     }
-    const msg = res.ok
+    const msg = res
       ? `测试成功 <font color="${color}">${responseTime}ms</font>`
       : '测试失败';
     confirmSpeedTest(msg);
