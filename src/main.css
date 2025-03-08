@@ -64,6 +64,10 @@ body {
   border-top-left-radius: 0;
 }
 
+.cusor-pointer {
+  cursor: pointer;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     --icon-color: #000000;

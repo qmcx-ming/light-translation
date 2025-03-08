@@ -4,6 +4,7 @@ import { init } from '../../utils/db';
 import { getConfig, setConfig, engineList } from '../../utils/config';
 import { showMessage } from '../../utils/common';
 import { translate } from '../../translate';
+import { getItem, setItem } from '../../utils/db';
 
 const props = defineProps({
   settingOpen: {
@@ -112,19 +113,35 @@ const openLink = (id) => {
 // 随机返回一个数组中的元素
 const randomText = () => {
   const arr = [
-    'Hello', 'Hi', 'Nice', 'Good', 'Hey', 'Hiya', 
-    'World', 'Sing', 'Dance', 'Rap', 'Basketball'
+    'Hello',
+    'Hi',
+    'Nice',
+    'Good',
+    'Hey',
+    'Hiya',
+    'World',
+    'Sing',
+    'Dance',
+    'Rap',
+    'Basketball',
   ];
   return arr[Math.floor(Math.random() * arr.length)];
-}
+};
 
 const speedTest = async () => {
   const loading = ElLoading.service({ fullscreen: true, text: '测试中...' });
+  isShowServer.value = false;
   let url = new URL(form.value.googleUrl);
   try {
     const startTime = performance.now(); // 开始时间
     const res = await translate(
-      randomText(), 'google', 'appId', 'secretKey', 'auto', 'zh-CN', url.href
+      randomText(),
+      'google',
+      'appId',
+      'secretKey',
+      'auto',
+      'zh-CN',
+      url.href
     );
     const endTime = performance.now(); // 结束时间
     const responseTime = (endTime - startTime).toFixed(2); // 响应时间
@@ -154,6 +171,43 @@ const confirmSpeedTest = (msg) => {
     showCancelButton: false,
     dangerouslyUseHTMLString: true,
   }).catch(() => {});
+};
+
+const serverList = ref([]);
+const isShowServer = ref(false);
+
+const getServerList = async () => {
+  isShowServer.value = true;
+  if (!serverList.value.length) {
+    const list = getItem('serverList');
+    if (list) {
+      serverList.value = list;
+      console.log('从本地获取服务器列表');
+    } else {
+      await getServerApi();
+    }
+  }
+};
+
+const fetchNewServerList = async () => {
+  const loading = ElLoading.service({ fullscreen: true, text: '测试中...' });
+  await getServerApi();
+  showMessage('更新服务器列表成功');
+  loading.close();
+}
+
+const getServerApi = async () => {
+  try {
+    const res = await fetch(
+      'https://mock.presstime.cn/mock/67a988796dcf57b17b1d37b9/translate-google-proxy/list'
+    );
+    const data = await res.json();
+    serverList.value = data.data;
+    setItem('serverList', serverList.value);
+    console.log('从服务器获取服务器列表');
+  } catch (err) {
+    showMessage('获取服务器列表失败，请稍后重试', 'error');
+  }
 };
 </script>
 <template>
@@ -187,26 +241,53 @@ const confirmSpeedTest = (msg) => {
           v-show="form.translateEngine === 'google'"
           prop="googleUrl"
         >
-          <el-input
-            class="config-google-url"
-            v-model="form.googleUrl"
-            placeholder="请输入谷歌翻译地址"
-            clearable
-          >
-            <template #prepend>
-              <img
-                class="engine-icon"
-                src="/icons/engine/google.svg"
-                alt="图标"
-              />
+          <el-dropdown trigger="click" max-height="300" style="width: 100%">
+            <el-input
+              class="config-google-url"
+              v-model="form.googleUrl"
+              placeholder="请输入谷歌翻译地址"
+              clearable
+              @focus="getServerList"
+            >
+              <template #prepend>
+                <img
+                  class="engine-icon"
+                  src="/icons/engine/google.svg"
+                  alt="图标"
+                />
+              </template>
+              <template #append>
+                <button class="test-btn" @click="speedTest">测试</button>
+              </template>
+            </el-input>
+            <template #dropdown>
+              <el-dropdown-menu v-show="isShowServer">
+                <el-dropdown-item
+                  v-for="(item, index) in serverList"
+                  :key="index"
+                  @click="form.googleUrl = item"
+                >
+                  {{ item }}
+                  <div v-show="item === form.googleUrl" class="icon-check">
+                    <svg-icon
+                      class-name="auto-switch"
+                      icon-name="icon-auto-switch"
+                      size="12px"
+                      color="var(--icon-color)"
+                    />
+                  </div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
             </template>
-            <template #append>
-              <button class="test-btn" @click="speedTest">测试</button>
-            </template>
-          </el-input>
+          </el-dropdown>
           <el-text size="small"
             >如果翻译地址无法访问，请及时更换其他可用地址。</el-text
           >
+          <el-popconfirm title="确定要同步最新服务吗？" confirm-button-text="确定" cancel-button-text="取消" @confirm="fetchNewServerList">
+            <template #reference>
+              <el-text class="cusor-pointer" size="small" type="primary" title="点击拉取最新服务地址列表"> 同步最新服务 </el-text>
+            </template>
+          </el-popconfirm>
         </el-form-item>
         <el-form-item
           label="百度翻译"
@@ -424,5 +505,11 @@ const confirmSpeedTest = (msg) => {
 
 .test-btn:hover {
   background-color: #66b1ff;
+}
+
+.icon-check {
+  width: 50%;
+  text-align: right;
+  margin-left: 5px;
 }
 </style>

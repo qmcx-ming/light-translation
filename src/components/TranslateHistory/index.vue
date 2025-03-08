@@ -182,7 +182,7 @@ onBeforeUnmount(() => {
 
 .history-toolbar {
   padding: 5px 10px;
-  background-color: #ffffff;
+  background-color: var(--el-popover-bg-color);
   position: sticky;
   top: 0;
   display: flex;
