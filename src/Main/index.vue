@@ -165,7 +165,8 @@ const toTranslate = () => {
     isLoading.value = false;
     return;
   }
-  translate(text.value, engine.value, id, key,
+  // 去除多余空格
+  translate(text.value.trim().replace(/\s+/g, ' '), engine.value, id, key,
   from.value, to.value, googleUrl.value)
   .then(res => {
     console.log(res);
