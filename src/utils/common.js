@@ -32,8 +32,30 @@ const $ = (el) => {
   return document.querySelector(el);
 }
 
+/**
+ * utools打开外部链接
+ * @param {string} url 链接
+ */
+const openURL = (url) => {
+  utools.shellOpenExternal(url);
+}
+
+/**
+ * 去除路径最后的斜杠
+ * @param {string} url 路径 
+ * @returns 
+ */
+const removeLastSlash = (url) => {
+  if (url.endsWith('/')) {
+    return url.slice(0, -1);
+  }
+  return url;
+}
+
 export {
   showMessage,
   handleKey,
-  $
+  $,
+  openURL,
+  removeLastSlash
 }

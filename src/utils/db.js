@@ -16,7 +16,9 @@ const data = {
   // 是否开启复制快捷键，默认开启
   copyKey: true,
   historyMax: 50,
-  autoTranslate: false
+  autoTranslate: false,
+  ttsUrl: 'https://ms-tts.qmcx-ming.top',
+  ttsToken: '',
 }
 
 /**

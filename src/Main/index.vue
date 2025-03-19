@@ -357,6 +357,12 @@ const toggleSound = async (audioId) => {
 };
 
 const playAudio = async (id) => {
+  const cfg = config.value;
+  // 若tts服务为默认，则设置其token则为ctrl-jntm，否则为配置的token
+  const token = (
+    cfg.ttsUrl === 'https://ms-tts.qmcx-ming.top' ||
+    cfg.ttsUrl === 'https://microsoft-tts.qmcx-ming.top'
+  ) ? 'ctrl-jntm' : config.ttsToken;
   stopAllAudios();
   const txt = id === 1 ? text.value : result.value;
   const lang = id === 1 ? (from.value === 'auto' ? detectLang.value.code : from.value) : to.value;
@@ -364,7 +370,7 @@ const playAudio = async (id) => {
   isPlaying.value[id - 1] = true;
   isLoading.value = true;
   // 获取音频数据
-  audio(txt, lang, null, 'ctrl-jntm')
+  audio(txt, lang, cfg.ttsUrl, token)
     .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
     .then(ad => {
       const player = ctx.createBufferSource();

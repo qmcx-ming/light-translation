@@ -2,7 +2,7 @@
 import { ref, watch, reactive } from 'vue';
 import { init } from '../../utils/db';
 import { getConfig, setConfig, engineList } from '../../utils/config';
-import { showMessage } from '../../utils/common';
+import { showMessage, openURL, removeLastSlash } from '../../utils/common';
 import { translate } from '../../translate';
 import { getItem, setItem } from '../../utils/db';
 
@@ -37,6 +37,19 @@ const rules = reactive({
       trigger: 'blur',
     },
   ],
+  ttsUrl: [
+    {
+      required: true,
+      message: '请输入语音朗读服务器地址',
+      trigger: 'blur',
+    },
+    {
+      message: '语音朗读服务器格式错误',
+      trigger: 'blur',
+      pattern:
+        /^https?:\/\/(([a-zA-Z0-9_-])+(\.)?)*(:\d+)?(\/((\.)?(\?)?=?&?[a-zA-Z0-9_-](\?)?)*)*$/i,
+    },
+  ],
 });
 
 const closeDrawer = () => {
@@ -56,6 +69,8 @@ const saveData = (formEl) => {
       return;
     }
   }
+  form.value.googleUrl = removeLastSlash(form.value.googleUrl);
+  form.value.ttsUrl = removeLastSlash(form.value.ttsUrl);
   formEl.validate((valid) => {
     if (valid) {
       setConfig(form.value);
@@ -194,7 +209,7 @@ const fetchNewServerList = async () => {
   await getServerApi();
   showMessage('更新服务器列表成功');
   loading.close();
-}
+};
 
 const getServerApi = async () => {
   try {
@@ -266,16 +281,9 @@ const getServerApi = async () => {
                   v-for="(item, index) in serverList"
                   :key="index"
                   @click="form.googleUrl = item"
+                  :class="{ 'dropdown_selected': item === form.googleUrl }"
                 >
                   {{ item }}
-                  <div v-show="item === form.googleUrl" class="icon-check">
-                    <svg-icon
-                      class-name="auto-switch"
-                      icon-name="icon-auto-switch"
-                      size="12px"
-                      color="var(--icon-color)"
-                    />
-                  </div>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -283,9 +291,21 @@ const getServerApi = async () => {
           <el-text size="small"
             >如果翻译地址无法访问，请及时更换其他可用地址。</el-text
           >
-          <el-popconfirm title="确定要同步最新服务吗？" confirm-button-text="确定" cancel-button-text="取消" @confirm="fetchNewServerList">
+          <el-popconfirm
+            title="确定要同步最新服务吗？"
+            confirm-button-text="确定"
+            cancel-button-text="取消"
+            @confirm="fetchNewServerList"
+          >
             <template #reference>
-              <el-text class="cusor-pointer" size="small" type="primary" title="点击拉取最新服务地址列表"> 同步最新服务 </el-text>
+              <el-text
+                class="cusor-pointer"
+                size="small"
+                type="primary"
+                title="点击拉取最新服务地址列表"
+              >
+                同步最新服务
+              </el-text>
             </template>
           </el-popconfirm>
         </el-form-item>
@@ -434,6 +454,48 @@ const getServerApi = async () => {
             </el-text>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="语音朗读" prop="ttsUrl">
+          <el-input
+            class="tts-url"
+            v-model="form.ttsUrl"
+            placeholder="请输入语音朗读服务地址"
+            clearable
+          >
+            <template #append>
+              <el-input
+                class="tts-url-token"
+                v-model="form.ttsToken"
+                placeholder="密钥(若未设置，留空即可)"
+                clearable
+              ></el-input>
+            </template>
+          </el-input>
+          <el-text size="small"
+            >语音朗读功能依托于开源项目
+            <el-text
+              size="small"
+              class="cusor-pointer"
+              type="primary"
+              @click="openURL('https://github.com/wxxxcxx/ms-ra-forwarder')"
+            >
+              ms-ra-forwarder
+            </el-text>
+            实现，您可根据需求自行部署到 Vercel &nbsp;
+          </el-text>
+          <el-tooltip
+            content="🚀 点击恢复默认TTS地址"
+            placement="top"
+          >
+            <el-text
+              size="small"
+              class="cusor-pointer"
+              type="primary"
+              @click="form.ttsUrl = 'https://ms-tts.qmcx-ming.top'"
+            >
+              恢复默认
+            </el-text>
+          </el-tooltip>
+        </el-form-item>
       </el-form>
     </div>
     <div class="drawer-footer">
@@ -452,7 +514,7 @@ const getServerApi = async () => {
 }
 
 .setting-page-content {
-  max-height: 400px;
+  max-height: 460px;
   overflow: auto;
 }
 
@@ -505,11 +567,5 @@ const getServerApi = async () => {
 
 .test-btn:hover {
   background-color: #66b1ff;
-}
-
-.icon-check {
-  width: 50%;
-  text-align: right;
-  margin-left: 5px;
 }
 </style>
