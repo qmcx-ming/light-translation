@@ -1,3 +1,8 @@
+import alibabaLanguage from '../languages/alibaba-language.json';
+import baiduLanguage from '../languages/baidu-language.json';
+import googleLanguage from '../languages/google-language.json';
+import microsoftLanguage from '../languages/microsoft-language.json';
+import tencentLanguage from '../languages/tencent-language.json';
 
 let elMessage = null;
 
@@ -52,10 +57,22 @@ const removeLastSlash = (url) => {
   return url;
 }
 
+const languageMap = Object.freeze({
+  alibaba: alibabaLanguage,
+  baidu: baiduLanguage,
+  google: googleLanguage,
+  microsoft: microsoftLanguage,
+  tencent: tencentLanguage
+})
+
+// 获取对应的语种包
+const getEngineLangList = (engine) => languageMap[engine] || [];
+
 export {
   showMessage,
   handleKey,
   $,
   openURL,
-  removeLastSlash
+  removeLastSlash,
+  getEngineLangList
 }

@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { translate, audio, detectLanguageZh } from '../translate';
 import { getConfig, setConfig, engineList, getEngineName } from '../utils/config';
 import { getHistory, setHistory } from '../utils/history';
-import { showMessage, $ } from '../utils/common';
+import { showMessage, $, getEngineLangList } from '../utils/common';
 
 import SettingPage from '../components/SettingPage/index.vue';
 import LangSelect from '../components/LangSelect/index.vue';
@@ -47,18 +47,19 @@ onBeforeUnmount(() => {
   window.removeEventListener('copy', copyResult);
 })
 
+const dynamicImagePath = (name) => {
+  return `${import.meta.env.BASE_URL}icons/engine/${name}.svg`;
+}
+
 const setLanguage = async () => {
-  // 动态导入语言包
-  const module = await import(`../languages/${engine.value}-language.json`);
-  languages.value = module.default;
+  languages.value = getEngineLangList(engine.value);
 }
 
 const iptRows = ref(15);// 输入框默认行数
 
-const engine = ref(config.value.translateEngine);
+const engine = computed(() => config.value.translateEngine || 'google');
 
 const changeEngine = async (engineId) => {
-  engine.value = engineId;
   config.value.translateEngine = engineId;
   console.log(config.value);
 
@@ -71,12 +72,11 @@ const changeEngine = async (engineId) => {
 const settingOpen = ref(false);
 
 const settingUpdate = async (cfg) => {
-  engine.value = cfg.translateEngine;
+  config.value = cfg;
   await setLanguage();
   from.value = languages.value[0].code;
   to.value = languages.value[1].code;
   googleUrl.value = cfg.googleUrl;
-  config.value = cfg;
 }
 
 const copyKeyListen = () => {
@@ -602,7 +602,7 @@ const processedEngineList = computed(() => {
       <el-dropdown placement="top" trigger="click">
         <img
           class="engine-icon"
-          :src="`./icons/engine/${engine}.svg`"
+          :src="dynamicImagePath(engine)"
           alt="图标"
         />
         <template #dropdown>
@@ -620,7 +620,7 @@ const processedEngineList = computed(() => {
             >
               <img
                 class="icon"
-                :src="`./icons/engine/${item.id}.svg`"
+                :src="dynamicImagePath(item.id)"
                 alt="图标"
                 :style="{ opacity: item.opacityStyle }"
               />

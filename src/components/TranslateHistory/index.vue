@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
   text-align: center;
   line-height: 18px;
   border-radius: 50%;
-  color: var(--color);
+  color: var(--color-main);
   cursor: pointer;
   letter-spacing: normal;
   transition: background-color 0.3s;

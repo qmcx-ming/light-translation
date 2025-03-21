@@ -199,7 +199,7 @@ const dictMoreShow = (meaning) => {
 .more-show {
   padding: 5px 10px;
   background-color: var(--more-show-bg);
-  color: var(--color);
+  color: var(--color-main);
   font-size: 12px;
   cursor: pointer;
   letter-spacing: 1px;

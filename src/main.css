@@ -83,7 +83,7 @@ body {
     --icon-color: #000000;
     --input-grepend-bg: #ffffff;
     --input-append-bg: #ffffff;
-    --color: #000000;
+    --color-main: #000000;
     --more-show-bg: rgba(0, 0, 0, 0.1);
   }
   body {
@@ -104,7 +104,7 @@ body {
     --icon-color: #ffffff;
     --input-grepend-bg: #262727;
     --input-append-bg: #141414;
-    --color: #ffffff;
+    --color-main: #ffffff;
     --more-show-bg: rgba(255, 255, 255, 0.1);;
   }
   &::-webkit-scrollbar-track-piece {
